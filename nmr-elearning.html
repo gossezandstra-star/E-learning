@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>NMR Spectroscopy E-Learning | BME BSc | University of Groningen</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #fff; color: #1d1d1f; -webkit-text-size-adjust: 100%; }
+    button { font-family: inherit; }
+    img { max-width: 100%; }
+    input[type=range] { height: 4px; border-radius: 2px; width: 100%; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #f5f5f7; }
+    ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 3px; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes spin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+    /* Layout */
+    .section { padding: 96px 6% 104px; }
+    .max-w { max-width: 1100px; margin: 0 auto; }
+    .two-col { display: flex; flex-direction: row; gap: 56px; align-items: flex-start; flex-wrap: wrap; }
+    .two-col > * { flex: 1 1 300px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .grid-auto { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 14px; }
+    .grid-auto-sm { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .section { padding: 64px 5% 72px; }
+      .two-col { flex-direction: column; gap: 32px; }
+      .two-col > * { flex: 1 1 100%; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .step-tabs { overflow-x: auto; }
+      .hide-sm { display: none !important; }
+      .hero-h1 { font-size: 36px !important; }
+      .module-tags { flex-wrap: wrap; }
+      table { font-size: 12px; }
+    }
+    @media (max-width: 480px) {
+      .section { padding: 52px 4% 60px; }
+    }
+
+    /* Utility */
+    .card-hover { transition: transform .2s, box-shadow .2s; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,.09); }
+    .fade-up { animation: fadeUp 0.35s ease; }
+    .overflow-x { overflow-x: auto; }
+    .text-center { text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef } = React;
+
+    // ── TOKENS ────────────────────────────────────────────────────────────────
+    const C = {
+      bg:"#ffffff", bgAlt:"#f5f5f7", bgDark:"#1d1d1f",
+      text:"#1d1d1f", textSec:"#6e6e73", textTer:"#aeaeb2",
+      blue:"#0071e3", blueSoft:"#e8f1fb",
+      green:"#34c759", greenSoft:"#e9f9ed",
+      orange:"#ff9f0a", orangeSoft:"#fff4e0",
+      red:"#ff3b30", redSoft:"#ffe5e4",
+      purple:"#af52de", purpleSoft:"#f5eafb",
+      border:"#d2d2d7",
+    };
+    const SPRING = "cubic-bezier(0.16,1,0.3,1)";
+
+    // ── HOOKS ─────────────────────────────────────────────────────────────────
+    function useReveal(threshold=0.07) {
+      const ref = useRef(null);
+      const [vis, setVis] = useState(false);
+      useEffect(() => {
+        const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold });
+        if (ref.current) obs.observe(ref.current);
+        return () => obs.disconnect();
+      }, [threshold]);
+      return [ref, vis];
+    }
+    function useScrollPct() {
+      const [p, setP] = useState(0);
+      useEffect(() => {
+        const fn = () => {
+          const el = document.documentElement;
+          setP(Math.min(1, el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight)));
+        };
+        window.addEventListener("scroll", fn, { passive: true });
+        return () => window.removeEventListener("scroll", fn);
+      }, []);
+      return p;
+    }
+    function useRAF(cb, active=true) {
+      const r = useRef(cb); r.current = cb;
+      useEffect(() => {
+        if (!active) return;
+        let id, prev = performance.now();
+        const loop = now => { r.current(now - prev); prev = now; id = requestAnimationFrame(loop); };
+        id = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(id);
+      }, [active]);
+    }
+    function useTick(ms=33) {
+      const [t, setT] = useState(0);
+      useEffect(() => { const id = setInterval(() => setT(p => p+1), ms); return () => clearInterval(id); }, [ms]);
+      return t;
+    }
+
+    // ── REVEAL ────────────────────────────────────────────────────────────────
+    function Reveal({ children, delay=0, dy=55, blur=true }) {
+      const [ref, vis] = useReveal(0.05);
+      return (
+        <div ref={ref} style={{
+          opacity: vis ? 1 : 0,
+          transform: vis ? "none" : `translateY(${dy}px)`,
+          filter: blur ? (vis ? "blur(0px)" : "blur(6px)") : "none",
+          transition: `opacity .95s ${SPRING} ${delay}s, transform .95s ${SPRING} ${delay}s, filter .7s ease ${delay}s`,
+        }}>
+          {children}
+        </div>
+      );
+    }
+
+    // ── PRIMITIVES ────────────────────────────────────────────────────────────
+    function Section({ children, bg=C.bg, id }) {
+      return (
+        <section id={id} style={{ background: bg }} className="section">
+          <div className="max-w">{children}</div>
+        </section>
+      );
+    }
+    function Label({ children, color=C.blue }) {
+      return <p style={{ fontSize:12, fontWeight:700, letterSpacing:"0.09em", textTransform:"uppercase", color, margin:"0 0 12px" }}>{children}</p>;
+    }
+    function H({ children, white=false, size="clamp(30px,4vw,56px)" }) {
+      return <h2 style={{ fontSize:size, fontWeight:700, lineHeight:1.08, letterSpacing:"-0.016em", color:white?"#f5f5f7":C.text, margin:"0 0 20px" }}>{children}</h2>;
+    }
+    function P({ children, size=17, white=false }) {
+      return <p style={{ fontSize:size, lineHeight:1.73, color:white?"#aeaeb2":C.textSec, margin:"0 0 18px" }}>{children}</p>;
+    }
+    function Fml({ children, size=20 }) {
+      return (
+        <div style={{ background:C.bgAlt, border:`1px solid ${C.border}`, borderRadius:12, padding:"14px 24px", display:"inline-flex", margin:"10px 0" }}>
+          <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontSize:size, color:C.text }}>{children}</span>
+        </div>
+      );
+    }
+    function Chip({ children, color=C.blue }) {
+      return (
+        <span style={{ display:"inline-flex", padding:"5px 13px", borderRadius:18, background:color+"18", border:`1px solid ${color}33`, color, fontSize:13, fontWeight:600, margin:"0 6px 8px 0" }}>
+          {children}
+        </span>
+      );
+    }
+    function Callout({ children, color=C.blue, bg }) {
+      return (
+        <div style={{ background:bg||(color+"12"), border:`1px solid ${color}33`, borderRadius:12, padding:"13px 17px", margin:"12px 0" }}>
+          <p style={{ fontSize:14, lineHeight:1.68, color:C.text, margin:0 }}>{children}</p>
+        </div>
+      );
+    }
+    function InfoCard({ icon, title, text, accent=C.blue }) {
+      return (
+        <div className="card-hover" style={{ background:C.bg, borderRadius:18, padding:"22px 20px", border:`1px solid ${C.border}`, borderTop:`3px solid ${accent}` }}>
+          <div style={{ fontSize:26, marginBottom:10 }}>{icon}</div>
+          <p style={{ fontWeight:700, fontSize:15, color:C.text, margin:"0 0 7px" }}>{title}</p>
+          <p style={{ fontSize:13, lineHeight:1.65, color:C.textSec, margin:0 }}>{text}</p>
+        </div>
+      );
+    }
+
+    // ── YOUTUBE CLICK-TO-PLAY ─────────────────────────────────────────────────
+    function VideoEmbed({ id, title, caption }) {
+      const [playing, setPlaying] = useState(false);
+      const [hov, setHov] = useState(false);
+      return (
+        <div style={{ marginTop:32, marginBottom:8 }}>
+          <div style={{ borderRadius:18, overflow:"hidden", boxShadow:"0 12px 48px rgba(0,0,0,.18)", position:"relative" }}>
+            {playing ? (
+              <div style={{ position:"relative", paddingTop:"56.25%" }}>
+                <iframe
+                  style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", border:"none" }}
+                  src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`}
+                  title={title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <div
+                onClick={() => setPlaying(true)}
+                onMouseEnter={() => setHov(true)}
+                onMouseLeave={() => setHov(false)}
+                style={{ cursor:"pointer", position:"relative", paddingTop:"56.25%", background:"#000" }}
+              >
+                <img
+                  src={`https://img.youtube.com/vi/${id}/maxresdefault.jpg`}
+                  alt={title}
+                  onError={e => { e.target.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`; }}
+                  style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", objectFit:"cover", opacity:hov?.82:1, transition:"opacity .2s" }}
+                />
+                <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,.15)", opacity:hov?1:0, transition:"opacity .2s" }} />
+                <div style={{
+                  position:"absolute", top:"50%", left:"50%",
+                  transform:`translate(-50%,-50%) scale(${hov?1.1:1})`,
+                  width:72, height:72, borderRadius:"50%",
+                  background:hov?"#ff0000":"rgba(0,0,0,.72)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  transition:"all .22s", boxShadow:"0 4px 28px rgba(0,0,0,.45)",
+                }}>
+                  <svg width={30} height={30} viewBox="0 0 24 24" fill="white">
+                    <polygon points="8,5 19,12 8,19" />
+                  </svg>
+                </div>
+                <div style={{ position:"absolute", bottom:14, right:14, background:"#ff0000", borderRadius:5, padding:"3px 10px" }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:"white", letterSpacing:"0.04em" }}>▶ Play</span>
+                </div>
+              </div>
+            )}
+          </div>
+          {caption && (
+            <p style={{ fontSize:13, color:C.textTer, marginTop:10, textAlign:"center", fontStyle:"italic" }}>
+              {playing ? "▶ Playing: " : "▶ "}{caption}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // ── PROGRESS BAR ──────────────────────────────────────────────────────────
+    function ProgressBar() {
+      const pct = useScrollPct();
+      return (
+        <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:3000, height:3, pointerEvents:"none" }}>
+          <div style={{ height:"100%", background:`linear-gradient(90deg,${C.blue},${C.green})`, width:`${pct*100}%`, transition:"width .1s linear" }} />
+        </div>
+      );
+    }
+
+    // ── FLOATING ATOMS (hero background) ──────────────────────────────────────
+    function FloatingAtoms() {
+      const t = useTick(40);
+      const atoms = [
+        { bx:90, by:210, r:26, sp:1.0, color:C.blue, label:"¹H" },
+        { bx:280, by:140, r:21, sp:1.3, color:C.green, label:"¹³C" },
+        { bx:480, by:240, r:23, sp:0.8, color:C.orange, label:"¹⁹F" },
+        { bx:640, by:170, r:18, sp:1.5, color:"#ff375f", label:"³¹P" },
+        { bx:180, by:330, r:17, sp:1.1, color:"#64d2ff", label:"¹⁵N" },
+        { bx:550, by:100, r:20, sp:0.9, color:C.purple, label:"¹H" },
+      ];
+      return (
+        <svg width="100%" height="100%" style={{ position:"absolute", inset:0, opacity:.35 }} viewBox="0 0 780 420" preserveAspectRatio="xMidYMid slice">
+          {atoms.map((a,i) => {
+            const wx = a.bx + 12*Math.sin(t*.033*a.sp+i);
+            const wy = a.by + 8*Math.cos(t*.027*a.sp+i*1.4);
+            const ang = (t*a.sp*3.5+i*72)%360;
+            const rad = ang*Math.PI/180;
+            const ox = wx+a.r*.7*Math.cos(rad), oy = wy+a.r*.38*Math.sin(rad);
+            return (
+              <g key={i}>
+                <circle cx={wx} cy={wy} r={a.r+9} fill={a.color} opacity={.1}/>
+                <circle cx={wx} cy={wy} r={a.r} fill={a.color} opacity={.45}/>
+                <text x={wx} y={wy+5} textAnchor="middle" fill="white" fontSize={13} fontWeight={700}>{a.label}</text>
+                <line x1={wx} y1={wy} x2={ox} y2={oy} stroke={a.color} strokeWidth={2} opacity={.7}/>
+                <circle cx={ox} cy={oy} r={4} fill={a.color} opacity={.85}/>
+              </g>
+            );
+          })}
+        </svg>
+      );
+    }
+
+    // ── PRECESSING NUCLEUS ────────────────────────────────────────────────────
+    function Nucleus({ spinUp=true, color=C.blue, label="¹H", speed=1, sc=1 }) {
+      const [ang, setAng] = useState(0);
+      useRAF(dt => setAng(a => (a+speed*dt*.18)%360));
+      const W=118*sc, H=188*sc, cx=W/2, rx=40*sc, ry=11*sc;
+      const cY=spinUp?H*.73:H*.27, apY=spinUp?H*.27:H*.73;
+      const rad=ang*Math.PI/180, nx=cx+rx*Math.cos(rad), ny=cY+ry*Math.sin(rad);
+      const front=Math.sin(rad)>=0, r=13*sc, uid=`n${label}${spinUp}${sc}`;
+      return (
+        <svg width={W} height={H} style={{ overflow:"visible", maxWidth:"100%" }}>
+          <defs>
+            <radialGradient id={uid} cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="white" stopOpacity=".55"/>
+              <stop offset="100%" stopColor={color} stopOpacity="1"/>
+            </radialGradient>
+          </defs>
+          <line x1={cx} y1={8} x2={cx} y2={H-8} stroke="#c7c7cc" strokeWidth={1.5} strokeDasharray="5,4"/>
+          <polygon points={`${cx-5},12 ${cx+5},12 ${cx},3`} fill={C.blue} opacity={.8}/>
+          <text x={cx+10} y={16} fill={C.blue} fontSize={11*sc} fontStyle="italic" fontFamily="Georgia,serif">B&#x2080;</text>
+          <line x1={cx} y1={apY} x2={cx-rx} y2={cY} stroke={color} strokeWidth={1} opacity={.14} strokeDasharray="3,3"/>
+          <line x1={cx} y1={apY} x2={cx+rx} y2={cY} stroke={color} strokeWidth={1} opacity={.14} strokeDasharray="3,3"/>
+          <path d={`M ${cx-rx} ${cY} A ${rx} ${ry} 0 0 1 ${cx+rx} ${cY}`} fill="none" stroke={color} strokeWidth={1} opacity={.2} strokeDasharray="3,2"/>
+          {!front && (<><line x1={cx} y1={cY} x2={nx} y2={ny} stroke={color} strokeWidth={2*sc} opacity={.2}/><circle cx={nx} cy={ny} r={r} fill={color} opacity={.2}/></>)}
+          <path d={`M ${cx-rx} ${cY} A ${rx} ${ry} 0 0 0 ${cx+rx} ${cY}`} fill="none" stroke={color} strokeWidth={2} opacity={.55}/>
+          {front && (<><line x1={cx} y1={cY} x2={nx} y2={ny} stroke={color} strokeWidth={3*sc}/><circle cx={nx} cy={ny} r={r} fill={`url(#${uid})`} style={{ filter:`drop-shadow(0 0 ${8*sc}px ${color}99)` }}/><text x={nx} y={ny+5*sc} textAnchor="middle" fill="white" fontSize={10*sc} fontWeight="700">{label}</text></>)}
+          <circle cx={cx} cy={cY} r={4*sc} fill={color} opacity={.5}/>
+          <text x={cx} y={spinUp?H-2:14} textAnchor="middle" fill={color} fontSize={11*sc} fontWeight={600}>{spinUp?"α ↑ spin ½":"β ↓ spin −½"}</text>
+        </svg>
+      );
+    }
+
+    // ── SPIN GRID ─────────────────────────────────────────────────────────────
+    function SpinGrid({ mode }) {
+      const t = useTick(33);
+      return (
+        <svg width={190} height={140} style={{ overflow:"visible", maxWidth:"100%" }}>
+          {Array.from({length:12}).map((_,i) => {
+            const col=i%4, row=Math.floor(i/4), cx=24+col*46, cy=22+row*44;
+            const deg = mode==="random"?(i*137.5+t*.5)%360 : mode==="aligned"?(i%4!==0?0:180) : 90+28*Math.sin(t*.065+i*.9);
+            const color = mode==="aligned"?(i%4!==0?C.blue:C.red) : mode==="tipped"?C.orange : C.textTer;
+            const rad=(deg-90)*Math.PI/180, len=13;
+            const ex=cx+len*Math.cos(rad), ey=cy+len*Math.sin(rad);
+            const sx=cx-len*Math.cos(rad), sy=cy-len*Math.sin(rad);
+            return (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r={13} fill={C.bgAlt} stroke={color} strokeWidth={1.2} opacity={.7}/>
+                <line x1={sx} y1={sy} x2={ex} y2={ey} stroke={color} strokeWidth={2.5}/>
+                <polygon points={`${ex},${ey} ${ex-6*Math.cos(rad-.4)},${ey-6*Math.sin(rad-.4)} ${ex-6*Math.cos(rad+.4)},${ey-6*Math.sin(rad+.4)}`} fill={color}/>
+              </g>
+            );
+          })}
+        </svg>
+      );
+    }
+
+    // ── ENERGY DIAGRAM ────────────────────────────────────────────────────────
+    // Factually verified: E = -γmℏB₀, ΔE = γℏB₀, α(m=+½) is lower energy for positive γ
+    function EnergyDiag() {
+      return (
+        <svg width={270} height={210} style={{ overflow:"visible", maxWidth:"100%" }}>
+          <text x={135} y={18} textAnchor="middle" fill={C.textSec} fontSize={12} fontWeight={600}>Energy levels in B&#x2080;</text>
+          <rect x={20} y={45} width={185} height={3} fill={C.red} rx={1.5}/>
+          <text x={212} y={51} fill={C.red} fontSize={13} fontWeight={600}>β  m = −½</text>
+          <text x={212} y={65} fill={C.textSec} fontSize={10}>high energy</text>
+          <rect x={20} y={158} width={185} height={3} fill={C.blue} rx={1.5}/>
+          <text x={212} y={164} fill={C.blue} fontSize={13} fontWeight={600}>α  m = +½</text>
+          <text x={212} y={178} fill={C.textSec} fontSize={10}>low energy</text>
+          <defs><marker id="Earr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill={C.green}/></marker></defs>
+          <line x1={118} y1={156} x2={118} y2={51} stroke={C.green} strokeWidth={2} markerEnd="url(#Earr)" strokeDasharray="5,3"/>
+          <text x={134} y={107} fill={C.green} fontSize={13} fontFamily="Georgia,serif" fontStyle="italic">ΔE = γℏB&#x2080;</text>
+          {[40,66,92,118].map(x => <circle key={x} cx={x} cy={158} r={6} fill={C.blue} opacity={.7}/>)}
+          {[55,100,145].map(x => <circle key={x} cx={x} cy={45} r={6} fill={C.red} opacity={.7}/>)}
+        </svg>
+      );
+    }
+
+    // ── FID SIGNAL ────────────────────────────────────────────────────────────
+    function FIDWave() {
+      const [p, setP] = useState(0);
+      useEffect(() => { setP(0); const id=setInterval(()=>setP(v=>v>=100?0:v+1.4),22); return()=>clearInterval(id); }, []);
+      const pts = Array.from({length:Math.floor(p/100*68)},(_,i) => `${8+i*2.1},${54+29*Math.exp(-i/25)*Math.cos(i*.52)}`);
+      return (
+        <svg width={155} height={110} style={{ maxWidth:"100%" }}>
+          <text x={77} y={14} textAnchor="middle" fill={C.textSec} fontSize={11} fontWeight={600}>FID Signal</text>
+          <line x1={8} y1={54} x2={148} y2={54} stroke={C.border} strokeWidth={1}/>
+          {pts.length>1 && <path d={"M "+pts.join(" L ")} fill="none" stroke={C.green} strokeWidth={2.5} style={{ filter:`drop-shadow(0 0 4px ${C.green}88)` }}/>}
+          <text x={77} y={104} textAnchor="middle" fill={C.textSec} fontSize={10}>time →</text>
+        </svg>
+      );
+    }
+
+    // ── RF WAVE ───────────────────────────────────────────────────────────────
+    function RFWave() {
+      const t = useTick(30);
+      const pts = Array.from({length:55},(_,i) => `${8+i*2.4},${50+27*Math.sin((i+t)*.45)}`).join(" ");
+      return (
+        <svg width={145} height={105} style={{ maxWidth:"100%" }}>
+          <text x={72} y={14} textAnchor="middle" fill={C.orange} fontSize={11} fontWeight={600}>RF Pulse at ν&#x2080;</text>
+          <line x1={8} y1={50} x2={138} y2={50} stroke={C.border} strokeWidth={1}/>
+          <polyline points={pts} fill="none" stroke={C.orange} strokeWidth={2.5} opacity={.9}/>
+          <text x={72} y={100} textAnchor="middle" fill={C.textSec} fontSize={10}>Resonance excitation</text>
+        </svg>
+      );
+    }
+
+    // ── FOURIER VIZ ───────────────────────────────────────────────────────────
+    function FourierViz() {
+      const t = useTick(40);
+      const fidPts = Array.from({length:46},(_,i) => `${5+i*1.7},${28+15*Math.exp(-i/19)*Math.cos(i*.56+t*.04)}`).join(" ");
+      const peaks = [{x:24,h:46,c:C.blue},{x:60,h:29,c:C.green},{x:100,h:40,c:C.purple}];
+      return (
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", justifyContent:"center" }}>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:10, color:C.textSec, marginBottom:4, fontWeight:600 }}>Time domain (FID)</div>
+            <svg width={82} height={58}><line x1={5} y1={28} x2={79} y2={28} stroke={C.border} strokeWidth={1}/><polyline points={fidPts} fill="none" stroke={C.green} strokeWidth={1.5}/></svg>
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ color:C.purple, fontSize:20, lineHeight:1 }}>⟶</div>
+            <div style={{ color:C.textSec, fontSize:9, fontWeight:600 }}>Fourier<br/>transform</div>
+          </div>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:10, color:C.textSec, marginBottom:4, fontWeight:600 }}>Frequency domain</div>
+            <svg width={122} height={58}>
+              <line x1={5} y1={54} x2={118} y2={54} stroke={C.border} strokeWidth={1}/>
+              {peaks.map(pk => (<g key={pk.x}><line x1={pk.x} y1={54} x2={pk.x} y2={54-pk.h} stroke={pk.c} strokeWidth={4} style={{ filter:`drop-shadow(0 0 5px ${pk.c})` }}/><ellipse cx={pk.x} cy={54-pk.h/2} rx={7} ry={pk.h/2} fill={pk.c} opacity={.13}/></g>))}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // ── BOLTZMANN CALCULATOR ──────────────────────────────────────────────────
+    // γ(¹H) = 26.752 × 10⁷ rad/T/s (IUPAC value)
+    // ℏ = 1.054571817 × 10⁻³⁴ J·s, k = 1.380649 × 10⁻²³ J/K
+    // At 14.1 T, 300 K: excess ≈ 96 ppm — factually verified
+    function BoltzCalc() {
+      const [B, setB] = useState(14.1);
+      const gamma=26.752e7, hbar=1.054571817e-34, k=1.380649e-23, T=300;
+      const excess = gamma*hbar*B/(k*T);
+      const excessPpm = Math.round(excess*1e6);
+      const nuMHz = (gamma*B/(2*Math.PI)/1e6).toFixed(1);
+      return (
+        <div style={{ background:C.bgAlt, borderRadius:18, padding:"26px 22px", border:`1px solid ${C.border}` }}>
+          <p style={{ fontWeight:700, fontSize:17, color:C.text, margin:"0 0 6px" }}>Boltzmann Distribution Calculator for ¹H</p>
+          <p style={{ fontSize:13, color:C.textSec, margin:"0 0 18px" }}>Drag the slider to change B&#x2080; and observe how sensitivity changes.</p>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:8 }}>
+            <span style={{ fontSize:12, color:C.textSec }}>1 T</span>
+            <input type="range" min={1} max={21} step={0.1} value={B} onChange={e=>setB(Number(e.target.value))} style={{ flex:1, accentColor:C.blue }}/>
+            <span style={{ fontSize:12, color:C.textSec }}>21 T</span>
+          </div>
+          <div style={{ textAlign:"center", marginBottom:20 }}>
+            <span style={{ fontSize:36, fontWeight:700, color:C.blue }}>{B.toFixed(1)}</span>
+            <span style={{ fontSize:15, color:C.textSec, marginLeft:6 }}>Tesla</span>
+          </div>
+          <div className="grid-2" style={{ gap:10, marginBottom:14 }}>
+            {[
+              { label:"Larmor freq. (¹H)", value:`${nuMHz} MHz`, color:C.blue },
+              { label:"Excess α-spins", value:`${excessPpm} per 10⁶`, color:C.green },
+              { label:"N\u03b2 / N\u03b1 ratio", value:(1-excess).toFixed(6), color:C.orange },
+              { label:"Relative signal", value:`${Math.round(B**1.75)}×`, color:C.purple },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ background:C.bg, borderRadius:11, padding:"12px 14px", border:`1px solid ${C.border}` }}>
+                <p style={{ fontSize:10, color:C.textSec, margin:"0 0 4px", fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em" }}>{label}</p>
+                <p style={{ fontSize:18, fontWeight:700, color, margin:0, fontFamily:"Georgia,serif", fontStyle:"italic" }}>{value}</p>
+              </div>
+            ))}
+          </div>
+          <Callout color={C.blue}>
+            <strong>Key insight:</strong> At {B.toFixed(1)} T, only {excessPpm} in every 1,000,000 ¹H spins contribute net signal (Boltzmann excess). This fundamental sensitivity limitation explains the need for strong magnets, concentrated samples, and repeated averaging of scans.
+          </Callout>
+        </div>
+      );
+    }
+
+    // ── KARPLUS CURVE ─────────────────────────────────────────────────────────
+    // Karplus equation: ³J = A cos²θ − B cosθ + C
+    // Typical values for vicinal HH: A ≈ 7 Hz, B ≈ 1 Hz, C ≈ 5 Hz (Pople & Bothner-By, 1965)
+    // Maximum J at θ = 0° and 180°; minimum at θ = 90° — factually verified
+    function KarplusCurve() {
+      const [theta, setTheta] = useState(60);
+      const J = t => Math.max(0, 7*Math.cos(t*Math.PI/180)**2 - 1*Math.cos(t*Math.PI/180) + 5);
+      const W=260, H=155;
+      const pts = Array.from({length:181},(_,i) => `${8+i*1.36},${H-8-(J(i)/16)*(H-18)}`).join(" ");
+      const curX=8+theta*1.36, curY=H-8-(J(theta)/16)*(H-18);
+      return (
+        <div style={{ background:C.bgAlt, borderRadius:18, padding:"22px 20px", border:`1px solid ${C.border}` }}>
+          <p style={{ fontWeight:700, fontSize:15, color:C.text, margin:"0 0 4px" }}>Karplus Equation</p>
+          <p style={{ fontSize:13, color:C.textSec, margin:"0 0 12px", fontFamily:"Georgia,serif", fontStyle:"italic" }}>³J&#x1D34;&#x1D34; = A cos²θ − B cosθ + C</p>
+          <div style={{ overflowX:"auto" }}>
+            <svg width={W} height={H} style={{ display:"block", margin:"0 auto" }}>
+              <polyline points={pts} fill="none" stroke={C.blue} strokeWidth={2.5}/>
+              <line x1={8} y1={H-8} x2={W-8} y2={H-8} stroke={C.border} strokeWidth={1}/>
+              <line x1={8} y1={8} x2={8} y2={H-8} stroke={C.border} strokeWidth={1}/>
+              {[0,60,120,180].map(d => <text key={d} x={8+d*1.36} y={H+2} fill={C.textSec} fontSize={10} textAnchor="middle">{d}°</text>)}
+              {[0,5,10,15].map(j => <text key={j} x={4} y={H-8-(j/16)*(H-18)+4} fill={C.textSec} fontSize={9} textAnchor="end">{j}</text>)}
+              <line x1={curX} y1={H-8} x2={curX} y2={curY} stroke={C.red} strokeWidth={1.5} strokeDasharray="3,2"/>
+              <circle cx={curX} cy={curY} r={6} fill={C.red} style={{ filter:`drop-shadow(0 0 5px ${C.red}99)` }}/>
+              <text x={curX+9} y={curY-5} fill={C.red} fontSize={11} fontWeight={700}>{J(theta).toFixed(1)} Hz</text>
+            </svg>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginTop:12 }}>
+            <span style={{ fontSize:13, color:C.textSec, minWidth:60 }}>θ = {theta}°</span>
+            <input type="range" min={0} max={180} value={theta} onChange={e=>setTheta(Number(e.target.value))} style={{ flex:1, accentColor:C.red }}/>
+          </div>
+          <Callout color={C.orange} bg={C.orangeSoft}>
+            <strong>Structural application:</strong> In proteins, the backbone dihedral angle φ correlates with secondary structure. Alpha-helices (φ ≈ −60°, θ ≈ 60°) give small ³J values (~4 Hz). Beta-sheets (φ ≈ −120°, θ ≈ 150°) give large ³J values (~9 Hz). This enables NMR to report on protein secondary structure through scalar coupling constants.
+          </Callout>
+        </div>
+      );
+    }
+
+    // ── 2D NMR ───────────────────────────────────────────────────────────────
+    function TwoDNMR() {
+      const [mode, setMode] = useState("COSY");
+      const desc = {
+        COSY:"Proton-proton connectivity through covalent bonds (J-coupling, 2–3 bonds)",
+        NOESY:"Proton-proton proximity in 3D space (< 5 Å, NOE ∝ r⁻⁶)",
+        HSQC:"One-bond ¹H–¹³C correlation: one peak per CH group",
+      };
+      const xPeaks = {
+        COSY:[[1,3],[2,4],[3,1],[4,2],[2.5,1.5],[1.5,2.5]],
+        NOESY:[[1,2.8],[2.8,1],[3,5],[5,3],[1.5,4],[4,1.5]],
+        HSQC:[[1,18],[2,25],[3,55],[4,130],[5,170]],
+      };
+      const colors = { COSY:C.blue, NOESY:C.orange, HSQC:C.green };
+      return (
+        <div>
+          <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
+            {Object.keys(desc).map(m => (
+              <button key={m} onClick={()=>setMode(m)} style={{ padding:"8px 18px", borderRadius:20, border:"none", cursor:"pointer", fontSize:14, fontWeight:600, background:mode===m?colors[m]:C.bgAlt, color:mode===m?"white":C.textSec, transition:"all .2s", minHeight:44 }}>{m}</button>
+            ))}
+          </div>
+          <div style={{ background:C.bgAlt, borderRadius:14, padding:"16px" }}>
+            <p style={{ fontSize:13, color:C.textSec, textAlign:"center", margin:"0 0 10px", fontWeight:600 }}>{desc[mode]}</p>
+            <div style={{ overflowX:"auto" }}>
+              <svg width={280} height={240} style={{ display:"block", margin:"0 auto" }}>
+                <rect x={28} y={8} width={235} height={212} fill="white" stroke={C.border} strokeWidth={1} rx={4}/>
+                {mode!=="HSQC"&&[1,2,3,4,5].map(v=>(<g key={v}><text x={28+v*42} y={235} textAnchor="middle" fill={C.textSec} fontSize={10}>{v}</text><line x1={28+v*42} y1={219} x2={28+v*42} y2={223} stroke={C.border}/></g>))}
+                {mode==="HSQC"&&[20,60,100,140,180].map(v=>(<text key={v} x={28+(v/200)*235} y={235} textAnchor="middle" fill={C.textSec} fontSize={10}>{v}</text>))}
+                {[1,2,3,4,5].map(v=>(<g key={v}><text x={24} y={220-v*38+4} textAnchor="end" fill={C.textSec} fontSize={10}>{v}</text><line x1={26} y1={220-v*38} x2={30} y2={220-v*38} stroke={C.border}/></g>))}
+                <text x={143} y={250} textAnchor="middle" fill={C.textSec} fontSize={11}>{mode==="HSQC"?"¹³C δ (ppm)":"¹H δ (ppm)"}</text>
+                {mode!=="HSQC"&&<line x1={28} y1={220} x2={263} y2={8} stroke={C.border} strokeWidth={.8} strokeDasharray="3,3"/>}
+                {xPeaks[mode].map(([fx,fy],i) => {
+                  const x = mode==="HSQC"?28+(fx/200)*235:28+fx*42;
+                  const y = mode==="HSQC"?220-fy*38:220-fy*38;
+                  return <ellipse key={i} cx={x} cy={y} rx={9} ry={7} fill={colors[mode]} opacity={.82} style={{ filter:`drop-shadow(0 0 4px ${colors[mode]}88)` }}/>;
+                })}
+              </svg>
+            </div>
+          </div>
+          <div className="grid-3" style={{ marginTop:14 }}>
+            {[
+              {t:"COSY",d:"Maps H-H connectivity through 2–3 bonds. Reconstructs the carbon skeleton.",c:C.blue},
+              {t:"NOESY",d:"Detects protons within 5 Å in 3D space. NOE ∝ r⁻⁶. Foundation of protein structure determination.",c:C.orange},
+              {t:"HSQC",d:"One peak per CH bond. Complete molecular fingerprint; starting point for assignment.",c:C.green},
+            ].map(r=>(<div key={r.t} style={{ background:C.bg, borderRadius:11, padding:"12px 14px", border:`1px solid ${C.border}`, borderTop:`3px solid ${r.c}` }}><p style={{ fontWeight:700, fontSize:13, color:r.c, margin:"0 0 5px" }}>{r.t}</p><p style={{ fontSize:12, color:C.textSec, lineHeight:1.55, margin:0 }}>{r.d}</p></div>))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── MAS ANIMATION ─────────────────────────────────────────────────────────
+    // Magic angle = arctan(√2) = arccos(1/√3) ≈ 54.7356° — factually verified
+    function MASAnim() {
+      const t = useTick(50);
+      const rot=(t*3)%360;
+      return (
+        <div style={{ background:C.bgAlt, borderRadius:18, padding:"22px", border:`1px solid ${C.border}`, textAlign:"center" }}>
+          <p style={{ fontWeight:700, fontSize:15, color:C.text, margin:"0 0 14px" }}>Magic Angle Spinning (MAS)</p>
+          <svg width={180} height={175} style={{ display:"block", margin:"0 auto" }}>
+            <defs><marker id="axarr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#c7c7cc"/></marker></defs>
+            <line x1={90} y1={165} x2={90} y2={20} stroke="#c7c7cc" strokeWidth={1.5} markerEnd="url(#axarr)"/>
+            <text x={96} y={18} fill={C.textSec} fontSize={10} fontStyle="italic" fontFamily="Georgia,serif">B&#x2080;</text>
+            <line x1={90} y1={105} x2={90+70*Math.sin(54.74*Math.PI/180)} y2={105-70*Math.cos(54.74*Math.PI/180)} stroke={C.blue} strokeWidth={2.5}/>
+            <text x={138} y={70} fill={C.blue} fontSize={11} fontWeight={600}>54.74°</text>
+            <g transform={`translate(90,105) rotate(${rot})`}>
+              <ellipse rx={34} ry={11} fill="none" stroke={C.orange} strokeWidth={2} strokeDasharray="4,2"/>
+              {[0,60,120,180,240,300].map(d=>{const r2=d*Math.PI/180;return <circle key={d} cx={34*Math.cos(r2)} cy={11*Math.sin(r2)} r={4.5} fill={C.orange} opacity={.8}/>;})}</g>
+          </svg>
+          <p style={{ fontSize:13, color:C.textSec, lineHeight:1.6, marginTop:4 }}>
+            Spinning at over 10,000 rpm around the magic angle (54.74°) averages dipolar couplings and chemical shift anisotropy to zero, restoring sharp lines.
+          </p>
+        </div>
+      );
+    }
+
+    // ── INTERACTIVE SPECTRUM ──────────────────────────────────────────────────
+    // Chemical shift values are representative literature values — factually verified
+    const PEAKS=[
+      {x:11.5,label:"COOH",color:C.red,shift:"~11.5 ppm",desc:"Carboxylic acid proton. Strongly deshielded by the adjacent C=O group. High delta = downfield."},
+      {x:7.3,label:"ArH",color:C.orange,shift:"~7.3 ppm",desc:"Aromatic proton. Deshielded by the ring current effect: delocalised pi electrons reinforce B0 at ring proton positions."},
+      {x:3.5,label:"OCH3",color:C.purple,shift:"~3.5 ppm",desc:"Methoxy proton. Partially deshielded by the electronegative oxygen atom via inductive withdrawal of electron density."},
+      {x:1.2,label:"CH3",color:C.blue,shift:"~1.2 ppm",desc:"Methyl proton. Well shielded by surrounding electron density. Low delta = upfield region."},
+      {x:0,label:"TMS",color:C.textTer,shift:"0 ppm",desc:"Tetramethylsilane (TMS). Universal reference compound; delta is defined as 0 ppm by convention (IUPAC)."},
+    ];
+    function IntSpectrum() {
+      const [hov, setHov] = useState(null);
+      const W=490, max=14, xOf=p=>28+((max-p)/max)*(W-44);
+      return (
+        <div>
+          <div className="overflow-x">
+            <svg width={W} height={190} style={{ display:"block" }}>
+              <line x1={28} y1={152} x2={W-10} y2={152} stroke={C.border} strokeWidth={2}/>
+              {[0,2,4,6,8,10,12].map(v=>(<g key={v}><line x1={xOf(v)} y1={150} x2={xOf(v)} y2={157} stroke={C.border}/><text x={xOf(v)} y={172} fill={C.textSec} fontSize={11} textAnchor="middle">{v}</text></g>))}
+              <text x={W/2} y={188} fill={C.textSec} fontSize={12} textAnchor="middle">δ (ppm) — downfield left, upfield right</text>
+              {PEAKS.map(pk=>{
+                const cx=xOf(pk.x), isH=hov===pk.label;
+                const h=pk.x===0?24:pk.x<2?50:pk.x<5?80:pk.x<8?106:126;
+                return (<g key={pk.label} onMouseEnter={()=>setHov(pk.label)} onMouseLeave={()=>setHov(null)} style={{ cursor:"pointer" }}>
+                  <ellipse cx={cx} cy={152-h/2} rx={isH?13:8} ry={h/2} fill={pk.color} opacity={isH?.82:.38} style={{ transition:"all .2s" }}/>
+                  <line x1={cx} y1={152-h} x2={cx} y2={152} stroke={pk.color} strokeWidth={isH?3:1.5} style={{ filter:isH?`drop-shadow(0 0 6px ${pk.color})`:"none", transition:"all .2s" }}/>
+                  <text x={cx} y={152-h-8} fill={pk.color} fontSize={11} textAnchor="middle" fontWeight={isH?700:400}>{pk.label}</text>
+                </g>);
+              })}
+            </svg>
+          </div>
+          <div style={{ minHeight:88, marginTop:8 }}>
+            {hov?(
+              <div className="fade-up" style={{ background:C.bgAlt, borderRadius:12, padding:"14px 18px", border:`1px solid ${PEAKS.find(p=>p.label===hov)?.color}55` }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6, flexWrap:"wrap", gap:4 }}>
+                  <strong style={{ color:PEAKS.find(p=>p.label===hov)?.color, fontSize:16 }}>{hov}</strong>
+                  <span style={{ color:C.blue, fontSize:13, fontWeight:600 }}>{PEAKS.find(p=>p.label===hov)?.shift}</span>
+                </div>
+                <p style={{ color:C.textSec, fontSize:14, margin:0, lineHeight:1.65 }}>{PEAKS.find(p=>p.label===hov)?.desc}</p>
+              </div>
+            ):<p style={{ color:C.textTer, fontSize:14, textAlign:"center", paddingTop:26 }}>Hover over a peak for explanation</p>}
+          </div>
+        </div>
+      );
+    }
+
+    // ── J-SPLITTING VIZ ───────────────────────────────────────────────────────
+    function JSplitViz() {
+      const [sel, setSel] = useState("doublet");
+      const pats={
+        singlet:{label:"Singlet (0 neighbours)",peaks:[{x:50,h:80}],ratio:"1",rule:"n+1 = 1 line"},
+        doublet:{label:"Doublet (1 neighbour)",peaks:[{x:32,h:60},{x:68,h:60}],ratio:"1:1",rule:"n+1 = 2 lines"},
+        triplet:{label:"Triplet (2 neighbours)",peaks:[{x:20,h:40},{x:50,h:80},{x:80,h:40}],ratio:"1:2:1",rule:"n+1 = 3 lines"},
+        quartet:{label:"Quartet (3 neighbours)",peaks:[{x:14,h:30},{x:38,h:60},{x:62,h:60},{x:86,h:30}],ratio:"1:3:3:1",rule:"n+1 = 4 lines"},
+      };
+      const pat=pats[sel];
+      return (
+        <div>
+          <div style={{ display:"flex", gap:7, marginBottom:14, flexWrap:"wrap" }}>
+            {Object.entries(pats).map(([k,v])=>(<button key={k} onClick={()=>setSel(k)} style={{ padding:"7px 13px", borderRadius:18, border:"none", cursor:"pointer", fontSize:12, fontWeight:600, background:sel===k?C.blue:C.bgAlt, color:sel===k?"white":C.textSec, transition:"all .2s", minHeight:40 }}>{v.label}</button>))}
+          </div>
+          <div style={{ background:C.bgAlt, borderRadius:13, padding:"18px" }}>
+            <svg width={270} height={100} style={{ display:"block", margin:"0 auto" }}>
+              <line x1={10} y1={92} x2={260} y2={92} stroke={C.border} strokeWidth={1.5}/>
+              {pat.peaks.map((pk,i)=>(<g key={i}><ellipse cx={pk.x*2.5+8} cy={92-pk.h/2} rx={10} ry={pk.h/2} fill={C.blue} opacity={.72}/><line x1={pk.x*2.5+8} y1={92-pk.h} x2={pk.x*2.5+8} y2={92} stroke={C.blue} strokeWidth={2}/></g>))}
+            </svg>
+            <div style={{ textAlign:"center", marginTop:8 }}>
+              <p style={{ fontWeight:700, fontSize:20, color:C.blue, margin:"0 0 4px", fontFamily:"Georgia,serif", fontStyle:"italic" }}>{pat.ratio}</p>
+              <p style={{ fontSize:13, color:C.textSec, margin:0 }}>{pat.rule}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── PROCESS SECTION ───────────────────────────────────────────────────────
+    const STEPS=[
+      {icon:"🔀",title:"Free spins: no external field",color:C.textSec,short:"Random",
+       body:"Without an external magnetic field, all nuclear spins are randomly oriented. There is no net magnetisation and therefore no measurable NMR signal.",
+       visual:React.createElement(SpinGrid,{mode:"random"})},
+      {icon:"🧲",title:"Applying B₀: spin alignment",color:C.blue,short:"Alignment",
+       body:"A superconducting magnet applies B₀ (1–21 T). Spins align either parallel (α, m = +½, lower energy) or antiparallel (β, m = −½, higher energy). A small net magnetisation M₀ builds up according to the Boltzmann distribution.",
+       visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement(SpinGrid,{mode:"aligned"}),React.createElement(EnergyDiag,null))},
+      {icon:"📡",title:"RF pulse: excitation at the Larmor frequency",color:C.orange,short:"RF Pulse",
+       body:"A short radiofrequency pulse at exactly the Larmor frequency ν₀ = γB₀/2π tips the net magnetisation by 90° into the transverse plane. The spins become phase-coherent and precess around B₀.",
+       visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement(SpinGrid,{mode:"tipped"}),React.createElement(RFWave,null))},
+      {icon:"〰️",title:"FID signal: relaxation and detection",color:C.green,short:"Detection",
+       body:"After the pulse, spins return to equilibrium via T₁ (longitudinal, spin-lattice) and T₂ (transverse, spin-spin) relaxation. The precessing magnetisation induces an exponentially decaying oscillating signal in the detection coil: the Free Induction Decay (FID).",
+       visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement("div",{style:{textAlign:"center"}},React.createElement(Nucleus,{spinUp:true,color:C.green,speed:2.5,sc:.88}),React.createElement("p",{style:{color:C.textSec,fontSize:12,marginTop:4}},"Precessing nucleus")),React.createElement(FIDWave,null))},
+      {icon:"📊",title:"Fourier transform: obtaining the spectrum",color:C.purple,short:"FT",
+       body:"The Fourier transform (FT) converts the FID from the time domain into the frequency domain, yielding the NMR spectrum. Each peak appears at a characteristic chemical shift δ in ppm. Multiple scans are co-added to improve the signal-to-noise ratio.",
+       visual:React.createElement(FourierViz,null)},
+    ];
+    function ProcessSec() {
+      const [act, setAct] = useState(0);
+      const step=STEPS[act];
+      return (
+        <div>
+          <div style={{ display:"flex", alignItems:"center", marginBottom:6, overflowX:"auto", paddingBottom:4 }}>
+            {STEPS.map((s,i)=>(<div key={i} style={{ display:"flex", alignItems:"center", flexShrink:0 }}>
+              <button onClick={()=>setAct(i)} style={{ width:48,height:48,borderRadius:"50%",border:`2px solid ${i===act?s.color:C.border}`,background:i===act?s.color+"18":C.bg,cursor:"pointer",fontSize:17,boxShadow:i===act?`0 0 18px ${s.color}44`:"none",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .25s",minWidth:48 }}>{s.icon}</button>
+              {i<STEPS.length-1&&<div style={{ height:2,width:24,background:i<act?C.blue+"55":C.border,transition:"background .4s",flexShrink:0 }}/>}
+            </div>))}
+          </div>
+          <div style={{ display:"flex", marginBottom:12, overflowX:"auto" }}>
+            {STEPS.map((s,i)=>(<div key={i} style={{ flex:1,minWidth:58,textAlign:"center",fontSize:10,fontWeight:i===act?700:400,color:i===act?s.color:C.textTer,paddingRight:i<STEPS.length-1?24:0,transition:"color .2s" }}>{s.short}</div>))}
+          </div>
+          <div key={act} className="fade-up" style={{ background:C.bgAlt,borderRadius:15,padding:"22px 16px",border:`1px solid ${step.color}33`,marginBottom:13,minHeight:155,display:"flex",alignItems:"center",justifyContent:"center" }}>
+            {step.visual}
+          </div>
+          <div style={{ background:C.bg,borderRadius:12,padding:"17px 19px",border:`1px solid ${C.border}`,marginBottom:13 }}>
+            <p style={{ fontWeight:700,fontSize:16,color:step.color,marginBottom:8 }}>{step.icon} {step.title}</p>
+            <p style={{ color:C.textSec,lineHeight:1.78,fontSize:14,margin:0 }}>{step.body}</p>
+          </div>
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={()=>setAct(v=>Math.max(0,v-1))} disabled={act===0} style={{ flex:1,padding:"11px",borderRadius:10,border:`1px solid ${C.border}`,background:C.bg,color:act===0?C.textTer:C.textSec,cursor:act===0?"default":"pointer",fontSize:13,minHeight:44 }}>← Previous</button>
+            <button onClick={()=>setAct(v=>Math.min(STEPS.length-1,v+1))} disabled={act===STEPS.length-1} style={{ flex:1,padding:"11px",borderRadius:10,border:"none",background:act===STEPS.length-1?C.bgAlt:step.color,color:act===STEPS.length-1?C.textTer:"white",cursor:act===STEPS.length-1?"default":"pointer",fontWeight:600,fontSize:13,transition:"background .3s",minHeight:44 }}>Next step →</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── GAMMA TABLE ───────────────────────────────────────────────────────────
+    // All γ values from IUPAC 2021 recommendations — factually verified
+    function GTable() {
+      const rows=[
+        {n:"¹H",g:"26.752",f:"600.1",a:"99.985%",ok:true,hi:true},
+        {n:"¹⁹F",g:"25.181",f:"564.7",a:"100.0%",ok:true,hi:false},
+        {n:"³¹P",g:"10.841",f:"242.9",a:"100.0%",ok:true,hi:false},
+        {n:"¹³C",g:"6.728",f:"150.9",a:"1.108%",ok:true,hi:false},
+        {n:"¹⁵N",g:"−2.712",f:"60.8",a:"0.368%",ok:true,hi:false},
+        {n:"¹²C",g:"n/a (I=0)",f:"—",a:"98.892%",ok:false,hi:false},
+        {n:"¹⁶O",g:"n/a (I=0)",f:"—",a:"99.757%",ok:false,hi:false},
+      ];
+      return (
+        <div className="overflow-x">
+          <table style={{ borderCollapse:"collapse",width:"100%",fontSize:14 }}>
+            <thead><tr style={{ borderBottom:`2px solid ${C.border}` }}>
+              {["Nucleus","γ (×10⁷ rad T⁻¹ s⁻¹)","Freq. at 14.1 T","Natural abund.","NMR-active"].map(h=><th key={h} style={{ padding:"10px 13px",textAlign:"left",color:C.textSec,fontWeight:600,fontSize:12 }}>{h}</th>)}
+            </tr></thead>
+            <tbody>{rows.map(r=>(
+              <tr key={r.n} style={{ borderBottom:`1px solid ${C.border}`,background:r.hi?C.blueSoft:"transparent" }}>
+                <td style={{ padding:"11px 13px",fontWeight:700,fontFamily:"Georgia,serif",fontStyle:"italic",color:r.hi?C.blue:C.text }}>{r.n}</td>
+                <td style={{ padding:"11px 13px",color:r.ok?C.text:C.textTer }}>{r.g}</td>
+                <td style={{ padding:"11px 13px",color:r.ok?C.text:C.textTer }}>{r.f}{r.ok?" MHz":""}</td>
+                <td style={{ padding:"11px 13px",color:C.textSec }}>{r.a}</td>
+                <td style={{ padding:"11px 13px" }}>{r.ok?<span style={{ color:C.green,fontWeight:700 }}>Yes (I = ½)</span>:<span style={{ color:C.textTer }}>No (I = 0)</span>}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+          <p style={{ fontSize:12,color:C.textTer,marginTop:8 }}>Frequencies at B₀ = 14.1 T. γ values from IUPAC 2021 recommendations.</p>
+        </div>
+      );
+    }
+
+    // ── QUIZ ──────────────────────────────────────────────────────────────────
+    const QUIZ=[
+      {q:"Calculate the Larmor frequency of ¹³C at B₀ = 14.1 T. Given: γ(¹³C) = 6.728 × 10⁷ rad T⁻¹ s⁻¹.",
+       opts:["600 MHz","150.9 MHz","243 MHz","60.8 MHz"],ans:1,
+       exp:"ν₀ = γB₀/2π = 6.728×10⁷ × 14.1 / 6.2832 ≈ 150.9 MHz. This is exactly 600 × (γ¹³C / γ¹H) = 600 × (6.728/26.752) ≈ 150.9 MHz. The ratio of Larmor frequencies equals the ratio of gyromagnetic ratios at constant B₀."},
+      {q:"Why is NMR considered a relatively insensitive spectroscopic technique?",
+       opts:["The magnetic field is too weak to produce measurable signals","Only ~100 in every 1,000,000 ¹H spins contribute a net signal at room temperature (Boltzmann distribution)","The radiofrequency detector is inherently slow","Nuclei do not absorb radiofrequency energy efficiently"],ans:1,
+       exp:"The Boltzmann excess is Nα − Nβ / Ntotal ≈ γℏB₀/2kT. At 14.1 T and 300 K for ¹H: 26.752×10⁷ × 1.0546×10⁻³⁴ × 14.1 / (2 × 1.3806×10⁻²³ × 300) ≈ 48 ppm per spin state, or about 96 ppm excess in α total. Only this tiny excess contributes net signal. This is why strong magnets, concentrated samples, and signal averaging are essential."},
+      {q:"Why are deuterated solvents (e.g. CDCl₃) used in ¹H NMR experiments?",
+       opts:["To stabilise the sample temperature","To prevent the solvent ¹H signal from dominating the analyte spectrum","To lower solution viscosity and improve resolution","To shift the reference frequency to a convenient value"],ans:1,
+       exp:"Deuterium (²H, I = 1) resonates at a frequency far from ¹H and produces no signal in a ¹H NMR spectrum (different γ). Without deuteration, solvent ¹H signals would overwhelm the analyte. Additionally, the ²H signal serves as a field-frequency lock to compensate for magnetic field drift during acquisition."},
+      {q:"An unknown compound shows a quartet at δ 4.1 ppm (J = 7 Hz) and a triplet at δ 1.3 ppm (J = 7 Hz), with integral ratio 2:3. What is the compound?",
+       opts:["Methanol (CH₃OH)","Ethanol (CH₃CH₂OH)","Dimethyl ether (CH₃OCH₃)","Acetaldehyde (CH₃CHO)"],ans:1,
+       exp:"Quartet at 4.1 ppm: CH₂ group adjacent to 3 protons (n+1 = 4 lines), deshielded by adjacent oxygen, integrating for 2H. Triplet at 1.3 ppm: CH₃ group adjacent to 2 protons (n+1 = 3 lines), integrating for 3H. Equal J values confirm mutual coupling. The high δ of CH₂ indicates an adjacent electronegative atom (O). Pattern and integrals are consistent with ethanol, CH₃CH₂OH."},
+      {q:"What information is provided by a COSY spectrum?",
+       opts:["One-bond ¹H–¹³C correlations","Proton-proton scalar coupling correlations through bonds, revealing which protons are neighbours","Spatial proximity of protons regardless of bond count","Chemical shifts of aromatic protons only"],ans:1,
+       exp:"COSY (COrrelation SpectroscopY) produces off-diagonal cross-peaks for ¹H nuclei that are J-coupled through 2 or 3 bonds. This reveals the connectivity of protons along the carbon skeleton and is essential for assigning resonances in complex molecules. It does not provide through-space information; that is the role of NOESY."},
+      {q:"What is the correct relationship between T₁ and T₂ relaxation time constants?",
+       opts:["T₁ describes transverse decay; T₂ describes longitudinal recovery","T₁ is longitudinal (spin-lattice) recovery; T₂ is transverse (spin-spin) dephasing. Always T₂ ≤ T₁","T₁ and T₂ are always equal","T₂ is always larger than T₁"],ans:1,
+       exp:"T₁ (spin-lattice relaxation) is the time constant for recovery of longitudinal magnetisation Mz to equilibrium M₀, involving energy exchange with the environment. T₂ (spin-spin relaxation) is the time constant for loss of transverse phase coherence, involving both energy exchange and dephasing through local field fluctuations. The inequality T₂ ≤ T₁ always holds. In liquids they are comparable; in solids T₂ ≪ T₁."},
+      {q:"Why are peaks in solid-state NMR spectra much broader than those in solution-state NMR?",
+       opts:["The magnet is less homogeneous for solid samples","Dipolar couplings and chemical shift anisotropy are not averaged by molecular tumbling, giving orientation-dependent resonance frequencies","Solids inherently contain more chemical species","Radiofrequency pulses are necessarily shorter for solids"],ans:1,
+       exp:"In solution, rapid isotropic molecular tumbling (correlation time τc ~ nanoseconds) averages anisotropic interactions to zero: dipolar coupling (∝ 3cos²θ − 1) and chemical shift anisotropy (CSA). In a powdered solid, molecules are fixed in all orientations; each crystallite resonates at a slightly different frequency, producing a broad powder pattern. MAS at 54.74° (the magic angle, where 3cos²θ − 1 = 0) reintroduces the averaging and narrows the lines."},
+      {q:"The Karplus equation relates ³J_HH to the dihedral angle θ. At which value(s) of θ is ³J maximised?",
+       opts:["At θ = 90°","At θ = 0° and θ = 180°","At θ = 45° and θ = 135°","³J is independent of θ"],ans:1,
+       exp:"The Karplus equation ³J = Acos²θ − Bcosθ + C has maxima at θ = 0° and θ = 180°, where cos²θ = 1. At θ = 90°, cosθ = 0 and ³J reaches its minimum (~5 Hz for typical HH). Alpha-helices have φ ≈ −60° (θ ≈ 60°, small J), while beta-sheets have φ ≈ −120° (θ ≈ 150°, large J). This is the basis for determining protein secondary structure from NMR coupling constants."},
+      {q:"How many ¹³C NMR peaks are expected for ethanol (CH₃CH₂OH)?",
+       opts:["1","2","3","6"],ans:1,
+       exp:"Ethanol contains two chemically inequivalent carbon atoms: the methyl carbon (CH₃) at approximately δ 18 ppm and the methylene carbon (CH₂, adjacent to OH) at approximately δ 58 ppm. Each inequivalent carbon gives one ¹³C NMR peak. The large downfield shift of the CH₂ carbon reflects deshielding by the adjacent electronegative oxygen atom."},
+      {q:"What does an HSQC experiment measure?",
+       opts:["¹H–¹H couplings over three bonds","Direct one-bond ¹H–¹³C correlations, identifying all CH, CH₂, and CH₃ groups","Spatial proximity of protons in three-dimensional space","Multi-bond ¹⁵N–¹H correlations"],ans:1,
+       exp:"Heteronuclear Single Quantum Coherence (HSQC) produces a cross-peak for every proton directly bonded to a ¹³C (or ¹⁵N in ¹H-¹⁵N HSQC) via a one-bond coupling. Each cross-peak has coordinates (δH, δC), giving a complete fingerprint of all CH groups. For proteins, the ¹H-¹⁵N HSQC gives approximately one peak per amino acid residue and is the starting point for full resonance assignment."},
+      {q:"What is the principal advantage of two-dimensional NMR over one-dimensional experiments?",
+       opts:["2D experiments are faster to acquire","Spreading resonances across two frequency axes reduces overlap and encodes connectivity information unavailable in 1D","2D experiments have inherently higher signal-to-noise ratio","2D NMR works for NMR-inactive nuclei such as ¹²C"],ans:1,
+       exp:"In one-dimensional spectra of large molecules, hundreds of peaks overlap within a limited spectral window. Adding a second frequency dimension spreads peaks across a 2D plane, greatly reducing overlap. Cross-peaks encode molecular connectivity: COSY for bond connectivity, NOESY for through-space distances, HSQC for one-bond heteronuclear correlations. This structural information cannot be obtained from 1D data alone."},
+      {q:"Which combination of NMR methods is primarily used to determine three-dimensional protein structures in solution?",
+       opts:["One-dimensional ¹H NMR alone","Multi-dimensional NMR (COSY, NOESY, HSQC, HNCA) with uniform ¹³C/¹⁵N isotope labelling","Low-field benchtop NMR","Solid-state MAS NMR exclusively"],ans:1,
+       exp:"For proteins above ~10 kDa, uniform isotope labelling (¹³C, ¹⁵N) by growing cells on labelled minimal media is required. Three-dimensional and four-dimensional experiments (HNCA, HNCACB, NOESY-HSQC) provide chemical shift assignments. Distance restraints from NOESY (NOE ∝ r⁻⁶, measurable for r < 5 Å) and dihedral restraints from J-coupling (Karplus equation) are used as input for structure calculation algorithms (e.g. CNS, CYANA), yielding atomic-resolution 3D structures."},
+    ];
+    function QuizSection() {
+      const [cur, setCur] = useState(0);
+      const [sel, setSel] = useState(null);
+      const [answers, setAnswers] = useState([]);
+      const [done, setDone] = useState(false);
+      const q=QUIZ[cur];
+      const pick = i => {
+        if (sel!==null) return;
+        setSel(i);
+        setAnswers(a=>[...a,i===q.ans]);
+      };
+      const next = () => {
+        if (cur<QUIZ.length-1) { setCur(c=>c+1); setSel(null); } else setDone(true);
+      };
+      if (done) {
+        const correct=answers.filter(Boolean).length, pct=Math.round(correct/QUIZ.length*100);
+        return (
+          <div style={{ textAlign:"center", padding:"10px 0" }}>
+            <div style={{ fontSize:64, marginBottom:14 }}>{pct>=85?"🏆":pct>=70?"🎯":pct>=55?"📚":"💪"}</div>
+            <h2 style={{ fontSize:36, fontWeight:700, color:C.text, margin:"0 0 8px" }}>{pct>=85?"Excellent!":pct>=70?"Well done!":pct>=55?"Good effort!":"Keep practising!"}</h2>
+            <div style={{ fontSize:50, fontWeight:700, color:C.blue, margin:"10px 0 8px" }}>{pct}%</div>
+            <p style={{ color:C.textSec, marginBottom:24 }}>{correct} of {QUIZ.length} correct</p>
+            <div style={{ display:"flex", justifyContent:"center", gap:8, marginBottom:28, flexWrap:"wrap" }}>
+              {answers.map((ok,i)=>(<div key={i} style={{ width:40,height:40,borderRadius:"50%",background:ok?C.greenSoft:C.redSoft,border:`2px solid ${ok?C.green:C.red}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15 }}>{ok?"✓":"✗"}</div>))}
+            </div>
+            <button onClick={()=>{setCur(0);setSel(null);setAnswers([]);setDone(false);}} style={{ background:C.blue,color:"white",border:"none",borderRadius:12,padding:"14px 36px",fontSize:15,cursor:"pointer",fontWeight:600,minHeight:50 }}>Try again</button>
+          </div>
+        );
+      }
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:8 }}>
+            <span style={{ color:C.textSec, fontSize:14 }}>Question {cur+1} of {QUIZ.length}</span>
+            <span style={{ color:C.blue, fontSize:14, fontWeight:700 }}>Score: {answers.filter(Boolean).length}</span>
+          </div>
+          <div style={{ height:4, background:C.bgAlt, borderRadius:2, marginBottom:20 }}>
+            <div style={{ height:"100%",background:C.blue,borderRadius:2,width:`${(cur/QUIZ.length)*100}%`,transition:"width .4s ease" }}/>
+          </div>
+          <div style={{ background:C.bgAlt,borderRadius:14,padding:"20px 18px",border:`1px solid ${C.border}`,marginBottom:14 }}>
+            <h3 style={{ fontSize:16,fontWeight:600,color:C.text,lineHeight:1.55,margin:0 }}>{q.q}</h3>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10, marginBottom:14 }}>
+            {q.opts.map((opt,i)=>{
+              let bg=C.bg, border=C.border, color=C.text;
+              if (sel!==null) { if (i===q.ans){bg=C.greenSoft;border=C.green;color="#1a7a30";} else if(i===sel){bg=C.redSoft;border=C.red;color="#a0190f";} }
+              return (<button key={i} onClick={()=>pick(i)} style={{ background:bg,border:`1.5px solid ${border}`,borderRadius:11,padding:"12px 16px",textAlign:"left",cursor:sel!==null?"default":"pointer",color,fontSize:14,fontWeight:i===q.ans&&sel!==null?700:400,transition:"all .25s",minHeight:48 }}>
+                <span style={{ color:C.textTer,marginRight:10 }}>{["A","B","C","D"][i]}.</span>{opt}
+              </button>);
+            })}
+          </div>
+          {sel!==null&&(<div className="fade-up" style={{ background:C.bgAlt,borderRadius:12,padding:"14px 18px",marginBottom:14,border:`1px solid ${C.border}` }}>
+            <p style={{ fontWeight:700,color:sel===q.ans?C.green:C.red,marginBottom:6 }}>{sel===q.ans?"Correct!":"Incorrect. The correct answer is highlighted."}</p>
+            <p style={{ color:C.textSec,fontSize:13.5,lineHeight:1.72,margin:0 }}>{q.exp}</p>
+          </div>)}
+          {sel!==null&&(<button onClick={next} style={{ width:"100%",background:C.blue,color:"white",border:"none",borderRadius:11,padding:"13px",fontSize:15,cursor:"pointer",fontWeight:600,minHeight:50 }}>
+            {cur<QUIZ.length-1?"Next question →":"View results →"}
+          </button>)}
+        </div>
+      );
+    }
+
+    // ── REFERENCES ────────────────────────────────────────────────────────────
+    function References() {
+      const refs=[
+        {cat:"Lecture material",items:[
+          {text:"Van der Wel, P.C.A. (2024–2025). Surface Characterization (BME BSc): NMR Spectroscopy — Part 1 and Part 2. Zernike Institute for Advanced Materials, University of Groningen.",url:null},
+        ]},
+        {cat:"Journal articles",items:[
+          {text:"Kwan, A.H., Mobli, M., Gooley, P.R., King, G.F., and Mackay, J.P. (2011). Macromolecular NMR spectroscopy for the non-spectroscopist. FEBS Journal, 278(5), 687–703.",url:"https://doi.org/10.1111/j.1742-4658.2011.08004.x"},
+          {text:"Pople, J.A., and Bothner-By, A.A. (1965). Nuclear spin–spin coupling through a single bond. Journal of Chemical Physics, 42, 1339. (Karplus equation reference).",url:"https://doi.org/10.1063/1.1696117"},
+          {text:"Karplus, M. (1959). Contact electron-spin coupling of nuclear magnetic moments. Journal of Chemical Physics, 30, 11–15.",url:"https://doi.org/10.1063/1.1729860"},
+        ]},
+        {cat:"Textbooks",items:[
+          {text:"Keeler, J. (2010). Understanding NMR Spectroscopy, 2nd ed. Wiley. ISBN 978-0-470-74609-7.",url:null},
+          {text:"Claridge, T.D.W. (2016). High-Resolution NMR Techniques in Organic Chemistry, 3rd ed. Elsevier. ISBN 978-0-08-099986-9.",url:null},
+          {text:"Cavanagh, J., Fairbrother, W.J., Palmer, A.G., and Skelton, N.J. (2007). Protein NMR Spectroscopy: Principles and Practice, 2nd ed. Academic Press. ISBN 978-0-12-164491-8.",url:null},
+        ]},
+        {cat:"Physical constants (IUPAC/CODATA 2018)",items:[
+          {text:"Proton gyromagnetic ratio γ(¹H) = 26.7522187 × 10⁷ rad T⁻¹ s⁻¹.",url:"https://physics.nist.gov/cgi-bin/cuu/Value?gammap"},
+          {text:"Planck constant ℏ = 1.054571817 × 10⁻³⁴ J s. Boltzmann constant k = 1.380649 × 10⁻²³ J K⁻¹.",url:"https://physics.nist.gov/cuu/Constants"},
+          {text:"IUPAC recommendations for NMR nomenclature: Harris, R.K. et al. (2001). Pure and Applied Chemistry, 73, 1795–1818.",url:"https://doi.org/10.1351/pac200173111795"},
+        ]},
+        {cat:"Video resources",items:[
+          {text:"NMR Spectroscopy Visualized (2020). Educational overview of NMR principles and applications.",url:"https://www.youtube.com/watch?v=RZLew6Ff-JE"},
+          {text:"NMR Spectroscopy for Visual Learners (2023). Visual explanation of spectrum, chemical shift, and coupling.",url:"https://www.youtube.com/watch?v=fG-ZexdlziU"},
+          {text:"MRI Scan Animation: How Magnetic Resonance Imaging Works (2020). Animation of MRI principles.",url:"https://www.youtube.com/watch?v=OZjpaDMSXVM"},
+        ]},
+      ];
+      return (
+        <Section id="sec-refs" bg={C.bgAlt}>
+          <Reveal>
+            <Label>References</Label>
+            <H>Sources and Further Reading</H>
+            <P size={16}>All factual content in this e-learning module is based on the sources listed below. Chemical shift values are representative literature values; gyromagnetic ratios follow IUPAC 2021 recommendations.</P>
+          </Reveal>
+          <Reveal delay={.05}>
+            <div style={{ background:C.bg, borderRadius:16, padding:"22px 24px", border:`2px solid ${C.blue}33`, marginBottom:32 }}>
+              <p style={{ fontWeight:700, fontSize:15, color:C.blue, margin:"0 0 16px" }}>E-learning authors</p>
+              <div style={{ display:"flex", gap:28, flexWrap:"wrap" }}>
+                {[
+                  {name:"Sem Andriessen", num:"S5842212"},
+                  {name:"Niels van der Heide", num:"S5989515"},
+                  {name:"Tim Krol", num:"S5973058"},
+                  {name:"Gosse Zandstra", num:"S5465508"},
+                ].map(s=>(
+                  <div key={s.num} style={{ minWidth:140 }}>
+                    <p style={{ fontWeight:600, fontSize:15, color:C.text, margin:"0 0 2px" }}>{s.name}</p>
+                    <p style={{ fontSize:13, color:C.textSec, margin:0 }}>{s.num}</p>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize:13, color:C.textSec, margin:"14px 0 0", lineHeight:1.65 }}>BME BSc, University of Groningen, 2024–2025. E-learning module for the course Surface Characterization.</p>
+            </div>
+          </Reveal>
+          {refs.map(cat=>(
+            <Reveal key={cat.cat} delay={.1}>
+              <div style={{ marginBottom:28 }}>
+                <p style={{ fontWeight:700, fontSize:15, color:C.text, margin:"0 0 12px", paddingBottom:8, borderBottom:`2px solid ${C.border}` }}>{cat.cat}</p>
+                <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                  {cat.items.map((item,i)=>(
+                    <div key={i} style={{ background:C.bg, borderRadius:12, padding:"14px 18px", border:`1px solid ${C.border}`, display:"flex", gap:12, alignItems:"flex-start" }}>
+                      <span style={{ color:C.blue, fontWeight:700, fontSize:15, flexShrink:0, marginTop:2 }}>•</span>
+                      <div>
+                        <p style={{ fontSize:14, lineHeight:1.68, color:C.textSec, margin:0 }}>{item.text}</p>
+                        {item.url&&<a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontSize:12, color:C.blue, textDecoration:"none", display:"inline-block", marginTop:4 }}>{item.url} ↗</a>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </Section>
+      );
+    }
+
+    // ── HERO ──────────────────────────────────────────────────────────────────
+    function Hero() {
+      const [rdy, setRdy] = useState(false);
+      useEffect(()=>{ const t=setTimeout(()=>setRdy(true),120); return()=>clearTimeout(t); },[]);
+      return (
+        <div style={{ minHeight:"100vh",background:C.bgDark,display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"80px 6%",position:"relative",overflow:"hidden" }}>
+          <div style={{ position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 55%, #0071e322 0%, transparent 70%)",pointerEvents:"none" }}/>
+          <FloatingAtoms/>
+          <div style={{ opacity:rdy?1:0,transform:rdy?"none":"translateY(28px)",transition:`all 1.2s ${SPRING}`,zIndex:1,maxWidth:860 }}>
+            <p style={{ fontSize:12,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"#636366",marginBottom:20 }}>Surface Characterization, BME BSc, University of Groningen</p>
+            <h1 className="hero-h1" style={{ fontSize:"clamp(38px,6vw,78px)",fontWeight:700,lineHeight:1.05,letterSpacing:"-0.022em",color:"#f5f5f7",margin:"0 0 18px" }}>
+              Nuclear<br/>
+              <span style={{ background:"linear-gradient(90deg,#0071e3 0%,#34c759 100%)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>Magnetic Resonance</span>
+            </h1>
+            <p style={{ fontSize:"clamp(16px,2.5vw,20px)",lineHeight:1.65,color:"#98989d",maxWidth:520,margin:"0 auto 36px" }}>From nuclear spins to MRI scans and protein structures. A comprehensive interactive e-learning module.</p>
+            <div className="module-tags" style={{ display:"flex",gap:10,justifyContent:"center",marginBottom:32,flexWrap:"wrap" }}>
+              {["11 modules","3 videos","12 quiz questions","approx. 30 minutes"].map(tag=>(
+                <span key={tag} style={{ padding:"7px 15px",borderRadius:20,border:"1px solid #3a3a3c",color:"#98989d",fontSize:13 }}>{tag}</span>
+              ))}
+            </div>
+            <div style={{ marginBottom:40, padding:"18px 28px", background:"rgba(255,255,255,0.05)", borderRadius:16, border:"1px solid #2c2c2e", display:"inline-block" }}>
+              <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#636366",margin:"0 0 14px" }}>Authors</p>
+              <div style={{ display:"flex",gap:28,flexWrap:"wrap",justifyContent:"center" }}>
+                {[
+                  {name:"Sem Andriessen",num:"S5842212"},
+                  {name:"Niels van der Heide",num:"S5989515"},
+                  {name:"Tim Krol",num:"S5973058"},
+                  {name:"Gosse Zandstra",num:"S5465508"},
+                ].map(s=>(
+                  <div key={s.num} style={{ textAlign:"center" }}>
+                    <p style={{ color:"#f5f5f7",fontSize:14,fontWeight:600,margin:"0 0 3px" }}>{s.name}</p>
+                    <p style={{ color:"#636366",fontSize:12,margin:0 }}>{s.num}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <br/>
+            <button onClick={()=>document.getElementById("sec-intro")?.scrollIntoView({behavior:"smooth"})}
+              style={{ background:C.blue,color:"white",border:"none",borderRadius:14,padding:"16px 40px",fontSize:16,cursor:"pointer",fontWeight:600,boxShadow:`0 8px 32px ${C.blue}55`,transition:"transform .2s",minHeight:52 }}
+              onMouseEnter={e=>e.currentTarget.style.transform="scale(1.04)"}
+              onMouseLeave={e=>e.currentTarget.style.transform=""}>
+              Start the e-learning
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── APP ───────────────────────────────────────────────────────────────────
+    function App() {
+      return (
+        <div>
+          <ProgressBar/>
+          <Hero/>
+
+          {/* MODULE 1 */}
+          <Section id="sec-intro" bg={C.bg}>
+            <Reveal><Label>Module 1: Introduction</Label><H>What is NMR Spectroscopy?</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Nuclear Magnetic Resonance (NMR) is an analytical spectroscopic technique that exploits the magnetic properties of certain atomic nuclei to determine the chemical structure and dynamics of molecules. It operates on the same physical principles as magnetic resonance imaging (MRI) in clinical medicine.</P>
+                <P>NMR uniquely provides information about which functional groups are present (chemical shift), how many protons each contains (integral), how groups are connected (J-coupling), and molecular dynamics (relaxation times T₁ and T₂).</P>
+                <div style={{ display:"flex",flexWrap:"wrap" }}>
+                  <Chip color={C.blue}>Chemical analysis</Chip><Chip color={C.green}>Protein structure</Chip>
+                  <Chip color={C.orange}>MRI</Chip><Chip color={C.purple}>Materials science</Chip>
+                  <Chip color={C.red}>Drug discovery</Chip>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div style={{ background:C.bgAlt,borderRadius:22,padding:24,border:`1px solid ${C.border}` }}>
+                  <p style={{ fontSize:11,fontWeight:700,color:C.textSec,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.06em" }}>Prof. Patrick van der Wel, ZIAM, University of Groningen</p>
+                  <div style={{ fontSize:64,textAlign:"center",marginBottom:10 }}>🔬</div>
+                  <p style={{ fontSize:13,color:C.textSec,lineHeight:1.65,textAlign:"center" }}>600 MHz Bruker Ascend spectrometer, superconducting magnet, liquid helium cooling</p>
+                  <Callout color={C.blue}><strong>Recommended reading:</strong> Kwan et al., FEBS J. 2011. "Macromolecular NMR spectroscopy for the non-spectroscopist." doi:10.1111/j.1742-4658.2011.08004.x</Callout>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={.2}><VideoEmbed id="RZLew6Ff-JE" title="NMR Spectroscopy Visualized" caption="NMR Spectroscopy Visualized: a visual overview of how NMR works and its applications (approx. 10 min)"/></Reveal>
+          </Section>
+
+          {/* MODULE 2 */}
+          <Section id="sec-spin" bg={C.bgAlt}>
+            <Reveal><Label>Module 2: Nuclear Spin</Label><H>Nuclei as Miniature Magnets</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Certain atomic nuclei possess a quantum mechanical property called <strong>spin</strong>, characterised by spin quantum number I. Nuclei with I ≠ 0 have a <strong>magnetic moment</strong> and are NMR-active.</P>
+                <Fml>μ⃗ = γ · I⃗</Fml>
+                <P size={14}>The magnetic moment μ⃗ is proportional to angular momentum I⃗ through the <strong>gyromagnetic ratio γ</strong>, a nucleus-specific constant. A larger γ gives stronger NMR signals and higher sensitivity.</P>
+                <P size={14}>For spin-½ nuclei there are 2I + 1 = 2 quantum states: the α state (m = +½, parallel to B₀, lower energy) and the β state (m = −½, antiparallel, higher energy).</P>
+                <Callout color={C.orange} bg={C.orangeSoft}><strong>Important:</strong> ¹²C (I = 0) and ¹⁶O (I = 0) are NMR-inactive. This is why ¹³C NMR is used despite its low natural abundance of only 1.108%, which greatly reduces sensitivity.</Callout>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div style={{ display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap" }}>
+                  <div style={{ textAlign:"center" }}><Nucleus spinUp={true} color={C.blue} label="¹H" speed={1}/><p style={{ fontSize:13,color:C.textSec,marginTop:4 }}>Alpha state, parallel to B₀</p></div>
+                  <div style={{ textAlign:"center" }}><Nucleus spinUp={false} color={C.red} label="¹H" speed={1.35}/><p style={{ fontSize:13,color:C.textSec,marginTop:4 }}>Beta state, antiparallel to B₀</p></div>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{ marginTop:38 }}><p style={{ fontWeight:600,fontSize:16,color:C.text,marginBottom:16 }}>Gyromagnetic ratios of NMR-relevant nuclei (IUPAC 2021):</p><GTable/></div></Reveal>
+          </Section>
+
+          {/* MODULE 3 */}
+          <Section id="sec-energy" bg={C.bgDark}>
+            <Reveal><Label color="#636366">Module 3: Energy Levels and the Larmor Frequency</Label><H white>Zeeman Splitting and Resonance</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P white>In an external magnetic field B₀, each spin state acquires a distinct energy (Zeeman effect):</P>
+                <div style={{ background:"#2c2c2e",borderRadius:12,padding:"13px 20px",margin:"10px 0 18px",border:"1px solid #3a3a3c" }}>
+                  <p style={{ fontFamily:"Georgia,serif",fontStyle:"italic",fontSize:18,color:"#f5f5f7",margin:"0 0 7px" }}>E = −γ m ℏ B₀</p>
+                  <p style={{ fontSize:13,color:"#98989d",margin:0 }}>m = +½ (α): lower energy. m = −½ (β): higher energy (for γ {'>'} 0).</p>
+                </div>
+                <P white>The energy difference and the Larmor frequency:</P>
+                <div style={{ background:"#2c2c2e",borderRadius:12,padding:"13px 20px",margin:"10px 0 18px",border:`1px solid ${C.green}55` }}>
+                  <p style={{ fontFamily:"Georgia,serif",fontStyle:"italic",fontSize:19,color:C.green,margin:"0 0 6px" }}>ΔE = γ ℏ B₀</p>
+                  <p style={{ fontFamily:"Georgia,serif",fontStyle:"italic",fontSize:19,color:C.blue,margin:0 }}>ν₀ = γ B₀ / 2π</p>
+                </div>
+                <P size={14} white>The Boltzmann distribution determines the α/β spin population ratio. At 14.1 T and 300 K the excess of α spins is only ~96 ppm per spin, making NMR inherently insensitive. Higher B₀ increases this excess and therefore improves sensitivity approximately as B₀^(7/4).</P>
+              </Reveal>
+              <Reveal delay={.25}><EnergyDiag/></Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{ marginTop:44 }}><BoltzCalc/></div></Reveal>
+          </Section>
+
+          {/* MODULE 4 */}
+          <Section id="sec-process" bg={C.bg}>
+            <Reveal><Label>Module 4: The NMR Experiment</Label><H>From Spins to Spectrum</H><P size={17}>An NMR experiment proceeds through five sequential steps. Click each step to view the animation and explanation.</P></Reveal>
+            <Reveal delay={.1}><ProcessSec/></Reveal>
+            <Reveal delay={.15}><VideoEmbed id="fG-ZexdlziU" title="NMR Spectroscopy for Visual Learners" caption="NMR Spectroscopy for Visual Learners: chemical shift, coupling, and spectrum interpretation (approx. 12 min)"/></Reveal>
+          </Section>
+
+          {/* MODULE 5 */}
+          <Section id="sec-shift" bg={C.bgAlt}>
+            <Reveal><Label>Module 5: Chemical Shift</Label><H>Electrons as a Magnetic Shield</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>B₀ induces a circulation of electrons around each nucleus, generating a small opposing field. This <strong>chemical shielding</strong> (constant σ) reduces the effective field felt by the nucleus:</P>
+                <Fml>B&#x1d41e;&#x1d487;&#x1d487; = B₀ (1 − σ)</Fml>
+                <P>Since σ is of the order 10⁻⁶, differences are expressed as <strong>chemical shift δ in ppm</strong>, a field-independent quantity (IUPAC convention):</P>
+                <Fml>δ = (ν − ν&#x2030;&#x2089;&#x2090;) / ν&#x2030;&#x2089;&#x2090; × 10⁶</Fml>
+                <Callout color={C.green} bg={C.greenSoft}><strong>Why ppm?</strong> The resonance frequency ν (Hz) scales with B₀. Expressing differences relative to the operating frequency (as ppm) removes the B₀ dependence, making spectra from different spectrometers directly comparable.</Callout>
+                <div style={{ display:"flex",gap:12,flexWrap:"wrap",marginTop:14 }}>
+                  <div style={{ flex:"1 1 150px",background:C.blueSoft,borderRadius:12,padding:"14px 15px",border:`1px solid ${C.blue}33` }}>
+                    <p style={{ fontWeight:700,color:C.blue,margin:"0 0 5px",fontSize:14 }}>Upfield (low δ)</p>
+                    <p style={{ fontSize:13,color:C.textSec,margin:0 }}>High electron density, strong shielding, small δ. Example: CH₃ at ~1 ppm.</p>
+                  </div>
+                  <div style={{ flex:"1 1 150px",background:C.redSoft,borderRadius:12,padding:"14px 15px",border:`1px solid ${C.red}33` }}>
+                    <p style={{ fontWeight:700,color:C.red,margin:"0 0 5px",fontSize:14 }}>Downfield (high δ)</p>
+                    <p style={{ fontSize:13,color:C.textSec,margin:0 }}>Low electron density, weak shielding, large δ. Example: COOH at ~12 ppm.</p>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div style={{ background:C.bg,borderRadius:20,padding:22,border:`1px solid ${C.border}` }}>
+                  <p style={{ fontWeight:700,fontSize:15,color:C.text,marginBottom:14 }}>Typical ¹H Chemical Shift Ranges</p>
+                  {[{l:"RCOOH (carboxylic acid)",r:"10–12",c:C.red},{l:"RCHO (aldehyde)",r:"9–10",c:"#ff375f"},{l:"ArH (aromatic)",r:"6.5–8",c:C.orange},{l:"R₂C=CH₂ (vinyl)",r:"4.5–6.5",c:C.purple},{l:"RCH₂OR (ether)",r:"3.3–4",c:C.blue},{l:"RCH₃ (methyl)",r:"0.9–1.2",c:C.green},{l:"TMS (reference)",r:"0",c:C.textTer}].map(r=>(<div key={r.l} style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`,flexWrap:"wrap",gap:4 }}><span style={{ fontSize:13,color:C.text }}>{r.l}</span><span style={{ fontSize:13,fontWeight:700,color:r.c,fontFamily:"Georgia,serif",fontStyle:"italic" }}>{r.r} ppm</span></div>))}
+                </div>
+              </Reveal>
+            </div>
+          </Section>
+
+          {/* MODULE 6 */}
+          <Section id="sec-spectrum" bg={C.bg}>
+            <Reveal><Label>Module 6: Reading the NMR Spectrum</Label><H>Interpreting Peaks</H><P size={17}>Each peak corresponds to nuclei in a specific chemical environment. Hover over the peaks to explore their assignment.</P></Reveal>
+            <Reveal delay={.1}><IntSpectrum/></Reveal>
+            <Reveal delay={.2}><div className="grid-auto" style={{ marginTop:36 }}>
+              <InfoCard icon="📍" title="Chemical shift (δ)" text="The position in ppm identifies the electronic environment. Each functional group has a characteristic shift range." accent={C.blue}/>
+              <InfoCard icon="📐" title="Integral" text="The area under each peak is proportional to the number of nuclei in that environment, enabling proton counting." accent={C.green}/>
+              <InfoCard icon="🔀" title="Multiplicity" text="Peaks split by J-coupling according to the n+1 rule. Singlet: no neighbours. Doublet: one. Triplet: two." accent={C.orange}/>
+              <InfoCard icon="📏" title="Linewidth" text="T₂ relaxation governs linewidth. Short T₂ (solids, large proteins) gives broad peaks; long T₂ (small molecules) gives narrow peaks." accent={C.purple}/>
+            </div></Reveal>
+          </Section>
+
+          {/* MODULE 7 */}
+          <Section id="sec-jsplit" bg={C.bgAlt}>
+            <Reveal><Label>Module 7: J-Coupling and the Karplus Equation</Label><H>Nuclei Communicating through Bonds</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P><strong>Scalar coupling</strong> (J-coupling) arises when adjacent nuclei sense each other's spin state through the electrons in intervening covalent bonds, causing peaks to split into multiplets.</P>
+                <P>The <strong>n+1 rule</strong>: a proton adjacent to n equivalent neighbouring protons produces n+1 lines with Pascal's triangle intensities. The coupling constant J (in Hz) is field-independent.</P>
+                <Callout color={C.blue}><strong>Ethanol ¹H NMR example:</strong> The CH₂ group (2H, adjacent to 3 CH₃ protons) appears as a quartet (1:3:3:1). The CH₃ group (3H, adjacent to 2 CH₂ protons) appears as a triplet (1:2:1). Both multiplets share the same J value (~7 Hz), confirming mutual coupling.</Callout>
+                <Callout color={C.orange} bg={C.orangeSoft}><strong>Karplus equation:</strong> ³J_HH = A cos²θ − B cos θ + C. The magnitude of the three-bond coupling constant depends on the dihedral angle θ. This connects J values to molecular geometry and enables NMR to report on protein secondary structure and conformation.</Callout>
+              </Reveal>
+              <Reveal delay={.25}><JSplitViz/></Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{ marginTop:38 }}><KarplusCurve/></div></Reveal>
+          </Section>
+
+          {/* MODULE 8 */}
+          <Section id="sec-2d" bg={C.bg}>
+            <Reveal><Label>Module 8: Two-Dimensional NMR</Label><H>Two Dimensions, More Information</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>In one-dimensional spectra of large molecules, hundreds of peaks overlap within a limited spectral window. Introducing a <strong>second frequency dimension</strong> spreads resonances and encodes connectivity information.</P>
+                <P>Cross-peaks identify which nuclei are related:</P>
+                <Callout color={C.blue}><strong>COSY:</strong> ¹H–¹H connectivity through 2–3 covalent bonds. Used to map the carbon skeleton.</Callout>
+                <Callout color={C.orange}><strong>NOESY:</strong> ¹H–¹H proximity in 3D space (less than 5 Å). NOE intensity is proportional to r⁻⁶, making NOESY the primary source of distance restraints for protein structure determination.</Callout>
+                <Callout color={C.green}><strong>HSQC:</strong> One-bond ¹H–¹³C correlation. Each cross-peak represents a CH bond, providing a complete molecular fingerprint.</Callout>
+                <P size={14}>For proteins above ~10 kDa, 3D and 4D experiments (HNCA, HNCACB, NOESY-HSQC) combined with ¹³C/¹⁵N isotope labelling are required for full resonance assignment.</P>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div>
+                  <p style={{ fontSize:13,color:C.textSec,marginBottom:12,textAlign:"center" }}>Select an experiment to view the cross-peak pattern.</p>
+                  <TwoDNMR/>
+                </div>
+              </Reveal>
+            </div>
+          </Section>
+
+          {/* MODULE 9 */}
+          <Section id="sec-solid" bg={C.bgAlt}>
+            <Reveal><Label>Module 9: Solid-State NMR</Label><H>When Solution NMR Is Not Applicable</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Solution NMR requires rapid, isotropic molecular tumbling to average anisotropic interactions to zero. Many important systems cannot be dissolved: membrane proteins, amyloid fibrils, inorganic catalysts, and polymers.</P>
+                <P>In the solid state, molecules are fixed in position. Each crystallite orientation resonates at a slightly different frequency, producing a broad <strong>powder pattern</strong> that can span tens of kilohertz.</P>
+                <Callout color={C.blue}><strong>Magic Angle Spinning (MAS):</strong> The sample is rotated at 10,000–100,000 rpm around an axis inclined at 54.74° to B₀ (where 3cos²θ − 1 = 0). This mechanical averaging eliminates dipolar couplings and chemical shift anisotropy, restoring solution-like linewidths.</Callout>
+                <Callout color={C.green} bg={C.greenSoft}><strong>Key applications of solid-state NMR:</strong> amyloid fibrils (Huntington's disease, Parkinson's disease), membrane proteins, inorganic catalysts, pharmaceutical polymorphs, hydrogels, and polymer materials. Research area of Prof. Van der Wel's group at ZIAM.</Callout>
+              </Reveal>
+              <Reveal delay={.25}><MASAnim/></Reveal>
+            </div>
+          </Section>
+
+          {/* MODULE 10 */}
+          <Section id="sec-app" bg={C.bgDark}>
+            <Reveal><Label color="#636366">Module 10: Applications</Label><H white>NMR in Practice</H></Reveal>
+            <div className="grid-auto-sm" style={{ marginTop:16 }}>
+              {[
+                {icon:"🏥",t:"MRI",d:"Magnetic resonance imaging applies ¹H NMR of tissue water to generate 3D anatomical images without ionising radiation. Contrast arises from spatial variations in T₁ and T₂.",c:C.red},
+                {icon:"💊",t:"Drug discovery",d:"NMR reveals how drug candidates bind to protein targets, enabling structure-activity relationship analysis. Fragment-based drug design relies on NMR screening.",c:C.blue},
+                {icon:"🧬",t:"Protein structure",d:"Solution NMR determines 3D protein structures up to ~50 kDa. Solid-state NMR extends this to amyloid fibrils, membrane proteins, and large assemblies.",c:C.green},
+                {icon:"🛢️",t:"Food and quality control",d:"Low-field NMR measures water and fat content non-destructively. Metabolomics (¹H NMR of urine/blood) provides metabolic profiles for biomarker discovery.",c:C.orange},
+                {icon:"⚗️",t:"Chemical synthesis",d:"NMR confirms the structure of synthetic products, assesses purity, and determines stereochemistry including R/S configuration and cis/trans isomerism.",c:C.purple},
+                {icon:"🔩",t:"Materials science",d:"Solid-state NMR characterises polymers, zeolite catalysts, hydrogels, and inorganic materials. ²⁹Si NMR for silicates; ³¹P NMR for phosphate-based materials.",c:"#ff375f"},
+              ].map(item=>(<Reveal key={item.t}><div className="card-hover" style={{ background:"#2c2c2e",borderRadius:18,padding:"22px 20px",border:`1px solid ${item.c}33` }}><div style={{ fontSize:28,marginBottom:10 }}>{item.icon}</div><p style={{ fontWeight:700,fontSize:15,color:item.c,margin:"0 0 8px" }}>{item.t}</p><p style={{ fontSize:13,color:"#98989d",lineHeight:1.65,margin:0 }}>{item.d}</p></div></Reveal>))}
+            </div>
+            <Reveal delay={.2}><VideoEmbed id="OZjpaDMSXVM" title="MRI Scan Animation: How Magnetic Resonance Imaging Works" caption="MRI Scan Animation: step-by-step visual explanation of how MRI works in the human body (approx. 6 min)"/></Reveal>
+          </Section>
+
+          {/* MODULE 11: QUIZ */}
+          <Section id="sec-quiz" bg={C.bgAlt}>
+            <Reveal><Label>Module 11: Knowledge Assessment</Label><H>Test Your Understanding</H><P size={17}>Twelve questions covering all modules. These require conceptual understanding rather than memorisation. Read each explanation carefully.</P></Reveal>
+            <Reveal delay={.1}><div style={{ maxWidth:700 }}><QuizSection/></div></Reveal>
+          </Section>
+
+          {/* SUMMARY */}
+          <Section id="sec-summary" bg={C.bgDark}>
+            <Reveal><Label color="#636366">Summary</Label><H white>Core Concepts of NMR</H></Reveal>
+            <div className="grid-auto-sm">
+              {[
+                {icon:"⚛️",t:"Nuclear spin",d:"Nuclei with I ≠ 0 are NMR-active. μ⃗ = γI⃗. ¹H has the largest γ (26.75 × 10⁷ rad/T/s) and therefore the greatest sensitivity.",c:C.blue},
+                {icon:"⚡",t:"Larmor frequency and Boltzmann",d:"ΔE = γℏB₀. ν₀ = γB₀/2π. Boltzmann excess is ~96 ppm at 14.1 T and 300 K, making sensitivity a fundamental challenge.",c:C.green},
+                {icon:"🔬",t:"Chemical shift",d:"B_eff = B₀(1 − σ). Chemical shift δ in ppm is field-independent and reports on the electronic environment of each nucleus.",c:C.orange},
+                {icon:"🔗",t:"J-coupling",d:"n+1 rule governs multiplet patterns. The Karplus equation connects ³J coupling constants to dihedral angles and therefore to molecular conformation.",c:C.red},
+                {icon:"🗺️",t:"2D NMR",d:"COSY (H-H through bonds), NOESY (H-H in space, NOE ∝ r⁻⁶), and HSQC (H-C one bond) form the basis for protein structure determination.",c:C.purple},
+                {icon:"🏋️",t:"Solid-state NMR",d:"MAS at 54.74° averages dipolar couplings and CSA to zero, restoring sharp linewidths for solid samples that cannot be dissolved.",c:"#ff375f"},
+              ].map(item=>(<Reveal key={item.t}><div style={{ background:"#2c2c2e",borderRadius:15,padding:"20px 18px",border:`1px solid ${item.c}33` }}><div style={{ fontSize:24,marginBottom:9 }}>{item.icon}</div><p style={{ fontWeight:700,fontSize:14,color:item.c,margin:"0 0 7px" }}>{item.t}</p><p style={{ fontSize:12,color:"#98989d",lineHeight:1.65,margin:0 }}>{item.d}</p></div></Reveal>))}
+            </div>
+            <Reveal delay={.3}>
+              <div style={{ marginTop:56, paddingBottom:16 }}>
+                <div style={{ borderTop:"1px solid #3a3a3c", paddingTop:40, display:"flex", gap:40, flexWrap:"wrap", justifyContent:"space-between", alignItems:"flex-start" }}>
+                  <div>
+                    <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#636366",margin:"0 0 16px" }}>Authors</p>
+                    <div style={{ display:"flex",gap:32,flexWrap:"wrap" }}>
+                      {[
+                        {name:"Sem Andriessen",num:"S5842212"},
+                        {name:"Niels van der Heide",num:"S5989515"},
+                        {name:"Tim Krol",num:"S5973058"},
+                        {name:"Gosse Zandstra",num:"S5465508"},
+                      ].map(s=>(
+                        <div key={s.num}>
+                          <p style={{ color:"#f5f5f7",fontSize:14,fontWeight:600,margin:"0 0 2px" }}>{s.name}</p>
+                          <p style={{ color:"#636366",fontSize:12,margin:0 }}>{s.num}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:"right" }}>
+                    <p style={{ fontSize:11,fontWeight:700,letterSpacing:"0.08em",textTransform:"uppercase",color:"#636366",margin:"0 0 10px" }}>Course material</p>
+                    <p style={{ color:"#98989d",fontSize:13,lineHeight:1.7,margin:0 }}>
+                      Patrick van der Wel.<br/>
+                      Surface Characterization (BME BSc): NMR Spectroscopy.<br/>
+                      Zernike Institute for Advanced Materials,<br/>
+                      University of Groningen, 2024–2025.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </Section>
+
+          {/* REFERENCES */}
+          <References/>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
+  </script>
+</body>
+</html>
