@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>NMR Spectroscopy E-Learning | BME BSc | University of Groningen</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #06060e;
+      color: #e8e8f0;
+      -webkit-text-size-adjust: 100%;
+    }
+    button { font-family: inherit; }
+    img { max-width: 100%; }
+    input[type=range] { height: 4px; border-radius: 2px; width: 100%; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0d0d1a; }
+    ::-webkit-scrollbar-thumb { background: #C9A96E; border-radius: 2px; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes shimmer { from { background-position: -200% center; } to { background-position: 200% center; } }
+    @keyframes rotateRing { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    @keyframes pulse { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+
+    /* Layout */
+    .section { padding: 108px 6% 116px; position: relative; overflow: hidden; }
+    .max-w { max-width: 1100px; margin: 0 auto; }
+    .two-col { display: flex; flex-direction: row; gap: 56px; align-items: flex-start; flex-wrap: wrap; }
+    .two-col > * { flex: 1 1 300px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .grid-auto { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 14px; }
+    .grid-auto-sm { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 12px; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .section { padding: 72px 5% 80px; }
+      .two-col { flex-direction: column; gap: 32px; }
+      .two-col > * { flex: 1 1 100%; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .hide-sm { display: none !important; }
+      .hero-h1 { font-size: 36px !important; }
+      .module-tags { flex-wrap: wrap; }
+      table { font-size: 12px; }
+      .side-nav { display: none !important; }
+    }
+    @media (max-width: 480px) {
+      .section { padding: 56px 4% 64px; }
+    }
+
+    /* Utility */
+    .card-hover { transition: transform .28s cubic-bezier(0.16,1,0.3,1), box-shadow .28s; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 56px rgba(0,0,0,.45); }
+    .fade-up { animation: fadeUp 0.4s ease; }
+    .overflow-x { overflow-x: auto; }
+    .text-center { text-align: center; }
+
+    /* Gold heading gradient */
+    .gold-gradient {
+      background: linear-gradient(110deg, #C9A96E 0%, #f5dfa0 40%, #C9A96E 70%, #e8c882 100%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 4s linear infinite;
+    }
+
+    /* Section divider */
+    .section + .section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 6%; right: 6%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(201,169,110,0.25), transparent);
+    }
+
+    /* Glass card base */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.09);
+    }
+    .glass-light {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+
+    /* Floating side nav */
+    .side-nav {
+      position: fixed;
+      right: 22px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5000;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      align-items: center;
+    }
+    .side-nav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      position: relative;
+    }
+    .side-nav-dot:hover { background: rgba(201,169,110,0.6); transform: scale(1.4); }
+    .side-nav-dot.active {
+      background: #C9A96E;
+      width: 8px; height: 8px;
+      box-shadow: 0 0 12px #C9A96Eaa;
+    }
+    .side-nav-dot .tooltip {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(12,12,22,0.92);
+      border: 1px solid rgba(201,169,110,0.3);
+      color: #C9A96E;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 5px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .side-nav-dot:hover .tooltip { opacity: 1; }
+
+    /* Checkpoint quiz styles */
+    .checkpoint-wrap {
+      margin-top: 40px;
+      border: 1px solid rgba(201,169,110,0.35);
+      border-radius: 20px;
+      padding: 28px 24px;
+      background: rgba(201,169,110,0.06);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // ── TOKENS ────────────────────────────────────────────────────────────────
+    // ── COLOUR THEORY: Analogous ocean palette ─────────────────────────────
+    // Base hue: 210° (sky blue) → spread ±40° through blue-teal-periwinkle
+    // Warm contrast: gold #C9A96E (complementary ~30°) — used for headings/nav
+    // Functional: coral #FF7C6E — reserved ONLY for wrong-answer / error states
+    const C = {
+      bg:"rgba(12,13,24,0.97)",
+      bgAlt:"rgba(16,18,32,0.97)",
+      bgDark:"rgba(5,6,14,0.99)",
+      bgCard:"rgba(255,255,255,0.05)",
+      text:"#dde2f2", textSec:"#7e8aaa", textTer:"#4a5270",
+
+      // 210° bright blue — primary labels, links, formula boxes
+      blue:"#4AA8FF",    blueSoft:"rgba(74,168,255,0.13)",
+      // 175° teal — correct answers, positive callouts, "green" role
+      green:"#00BFA8",   greenSoft:"rgba(0,191,168,0.13)",
+      // 195° sky/ice — secondary callouts, "orange" role
+      orange:"#2EC4E0",  orangeSoft:"rgba(46,196,224,0.13)",
+      // 230° periwinkle — tertiary labels, "purple" role
+      purple:"#7A9FFF",  purpleSoft:"rgba(122,159,255,0.13)",
+      // 155° seafoam — quaternary accent, progress, chips
+      seafoam:"#00D4A4", seafoamSoft:"rgba(0,212,164,0.13)",
+      // Coral — ONLY for error/incorrect states (functional, not decorative)
+      red:"#FF7C6E",     redSoft:"rgba(255,124,110,0.13)",
+      // Gold — warm complementary accent (headings, nav, borders)
+      gold:"#C9A96E",    goldSoft:"rgba(201,169,110,0.1)",
+
+      border:"rgba(255,255,255,0.09)",
+      borderGold:"rgba(201,169,110,0.28)",
+    };
+    const SPRING = "cubic-bezier(0.16,1,0.3,1)";
+
+    // ── NAV SECTIONS ──────────────────────────────────────────────────────────
+    const NAV_SECTIONS = [
+      {id:"hero",label:"Start"},
+      {id:"sec-intro",label:"1 · Introduction"},
+      {id:"sec-spin",label:"2 · Nuclear Spin"},
+      {id:"sec-energy",label:"3 · Energy Levels"},
+      {id:"sec-process",label:"4 · The Experiment"},
+      {id:"sec-shift",label:"5 · Chemical Shift"},
+      {id:"sec-spectrum",label:"6 · Reading Spectra"},
+      {id:"sec-jsplit",label:"7 · J-Coupling"},
+      {id:"sec-2d",label:"8 · 2D NMR"},
+      {id:"sec-solid",label:"9 · Solid-State"},
+      {id:"sec-app",label:"10 · Applications"},
+      {id:"sec-quiz",label:"11 · Quiz"},
+      {id:"sec-summary",label:"Summary"},
+    ];
+
+    // ── QUIZ DATA ──────────────────────────────────────────────────────────────
+    const QUIZ_ALL=[
+      {q:"Calculate the Larmor frequency of ¹³C at B₀ = 14.1 T. Given: γ(¹³C) = 6.728 × 10⁷ rad T⁻¹ s⁻¹.",
+       opts:["600 MHz","150.9 MHz","243 MHz","60.8 MHz"],ans:1,
+       exp:"ν₀ = γB₀/2π = 6.728×10⁷ × 14.1 / 6.2832 ≈ 150.9 MHz. This is exactly 600 × (γ¹³C / γ¹H) = 600 × (6.728/26.752) ≈ 150.9 MHz. The ratio of Larmor frequencies equals the ratio of gyromagnetic ratios at constant B₀."},
+      {q:"Why is NMR considered a relatively insensitive spectroscopic technique?",
+       opts:["The magnetic field is too weak to produce measurable signals","Only ~100 in every 1,000,000 ¹H spins contribute a net signal at room temperature (Boltzmann distribution)","The radiofrequency detector is inherently slow","Nuclei do not absorb radiofrequency energy efficiently"],ans:1,
+       exp:"The Boltzmann excess is Nα − Nβ / Ntotal ≈ γℏB₀/2kT. At 14.1 T and 300 K for ¹H: excess ≈ 96 ppm. Only this tiny fraction contributes net signal. This is why strong magnets, concentrated samples, and signal averaging are essential."},
+      {q:"Why are deuterated solvents (e.g. CDCl₃) used in ¹H NMR experiments?",
+       opts:["To stabilise the sample temperature","To prevent the solvent ¹H signal from dominating the analyte spectrum","To lower solution viscosity and improve resolution","To shift the reference frequency to a convenient value"],ans:1,
+       exp:"Deuterium (²H, I = 1) resonates at a frequency far from ¹H and produces no signal in a ¹H NMR spectrum (different γ). Without deuteration, solvent ¹H signals would overwhelm the analyte. Additionally, the ²H signal serves as a field-frequency lock."},
+      {q:"An unknown compound shows a quartet at δ 4.1 ppm (J = 7 Hz) and a triplet at δ 1.3 ppm (J = 7 Hz), with integral ratio 2:3. What is the compound?",
+       opts:["Methanol (CH₃OH)","Ethanol (CH₃CH₂OH)","Dimethyl ether (CH₃OCH₃)","Acetaldehyde (CH₃CHO)"],ans:1,
+       exp:"Quartet at 4.1 ppm: CH₂ adjacent to 3 CH₃ protons (n+1 = 4 lines). Triplet at 1.3 ppm: CH₃ adjacent to 2 CH₂ protons (n+1 = 3 lines). Equal J values confirm mutual coupling. Pattern and integrals match ethanol, CH₃CH₂OH."},
+      {q:"What information is provided by a COSY spectrum?",
+       opts:["One-bond ¹H–¹³C correlations","Proton-proton scalar coupling correlations through bonds, revealing which protons are neighbours","Spatial proximity of protons regardless of bond count","Chemical shifts of aromatic protons only"],ans:1,
+       exp:"COSY (COrrelation SpectroscopY) produces off-diagonal cross-peaks for ¹H nuclei that are J-coupled through 2 or 3 bonds. This reveals connectivity of protons along the carbon skeleton and is essential for resonance assignment."},
+      {q:"What is the correct relationship between T₁ and T₂ relaxation time constants?",
+       opts:["T₁ describes transverse decay; T₂ describes longitudinal recovery","T₁ is longitudinal (spin-lattice) recovery; T₂ is transverse (spin-spin) dephasing. Always T₂ ≤ T₁","T₁ and T₂ are always equal","T₂ is always larger than T₁"],ans:1,
+       exp:"T₁ (spin-lattice relaxation) is the time constant for recovery of longitudinal magnetisation Mz. T₂ (spin-spin relaxation) is the time constant for loss of transverse phase coherence. The inequality T₂ ≤ T₁ always holds."},
+      {q:"Why are peaks in solid-state NMR spectra much broader than those in solution-state NMR?",
+       opts:["The magnet is less homogeneous for solid samples","Dipolar couplings and chemical shift anisotropy are not averaged by molecular tumbling, giving orientation-dependent resonance frequencies","Solids inherently contain more chemical species","Radiofrequency pulses are necessarily shorter for solids"],ans:1,
+       exp:"In solution, rapid isotropic tumbling averages dipolar coupling (∝ 3cos²θ−1) and CSA to zero. In solids, each crystallite orientation resonates at a different frequency, giving a broad powder pattern. MAS at 54.74° restores averaging."},
+      {q:"The Karplus equation relates ³J_HH to the dihedral angle θ. At which value(s) of θ is ³J maximised?",
+       opts:["At θ = 90°","At θ = 0° and θ = 180°","At θ = 45° and θ = 135°","³J is independent of θ"],ans:1,
+       exp:"The Karplus equation ³J = Acos²θ − Bcosθ + C has maxima at θ = 0° and θ = 180°, where cos²θ = 1. At θ = 90°, ³J reaches its minimum (~5 Hz). Alpha-helices (φ ≈ −60°) give small J; beta-sheets (φ ≈ −120°) give large J."},
+      {q:"How many ¹³C NMR peaks are expected for ethanol (CH₃CH₂OH)?",
+       opts:["1","2","3","6"],ans:1,
+       exp:"Ethanol contains two chemically inequivalent carbons: methyl (CH₃, ~δ 18 ppm) and methylene (CH₂, ~δ 58 ppm). Each inequivalent carbon gives one ¹³C peak. The downfield shift of CH₂ reflects deshielding by the adjacent electronegative oxygen."},
+      {q:"What does an HSQC experiment measure?",
+       opts:["¹H–¹H couplings over three bonds","Direct one-bond ¹H–¹³C correlations, identifying all CH, CH₂, and CH₃ groups","Spatial proximity of protons in three-dimensional space","Multi-bond ¹⁵N–¹H correlations"],ans:1,
+       exp:"Heteronuclear Single Quantum Coherence (HSQC) produces a cross-peak for every proton directly bonded to ¹³C via a one-bond coupling. Each cross-peak has coordinates (δH, δC), providing a complete fingerprint of all CH groups."},
+      {q:"What is the principal advantage of two-dimensional NMR over one-dimensional experiments?",
+       opts:["2D experiments are faster to acquire","Spreading resonances across two frequency axes reduces overlap and encodes connectivity information unavailable in 1D","2D experiments have inherently higher signal-to-noise ratio","2D NMR works for NMR-inactive nuclei such as ¹²C"],ans:1,
+       exp:"In 1D spectra of large molecules, hundreds of peaks overlap in a limited spectral window. A second frequency dimension spreads peaks and encodes connectivity (COSY: bonds; NOESY: space; HSQC: one-bond heteronuclear). This structural information cannot be obtained from 1D data alone."},
+      {q:"Which combination of NMR methods is primarily used to determine three-dimensional protein structures in solution?",
+       opts:["One-dimensional ¹H NMR alone","Multi-dimensional NMR (COSY, NOESY, HSQC, HNCA) with uniform ¹³C/¹⁵N isotope labelling","Low-field benchtop NMR","Solid-state MAS NMR exclusively"],ans:1,
+       exp:"For proteins above ~10 kDa, uniform ¹³C/¹⁵N labelling enables 3D/4D experiments (HNCA, HNCACB, NOESY-HSQC). NOESY distance restraints (NOE ∝ r⁻⁶, r < 5 Å) and Karplus dihedral restraints feed into structure calculation (CNS, CYANA), yielding atomic-resolution 3D structures."},
+    ];
+
+    // Questions shown inline as checkpoints (indices into QUIZ_ALL)
+    const CHECKPOINT_M3  = [QUIZ_ALL[0], QUIZ_ALL[1]];          // after Module 3
+    const CHECKPOINT_M5  = [QUIZ_ALL[2]];                        // after Module 5
+    const CHECKPOINT_M6  = [QUIZ_ALL[3]];                        // after Module 6
+    const CHECKPOINT_M7  = [QUIZ_ALL[7]];                        // after Module 7
+    const CHECKPOINT_M8  = [QUIZ_ALL[4], QUIZ_ALL[9]];          // after Module 8
+    const QUIZ_FINAL     = [QUIZ_ALL[5], QUIZ_ALL[6], QUIZ_ALL[8], QUIZ_ALL[10], QUIZ_ALL[11]]; // Module 11
+
+    // ── HOOKS ─────────────────────────────────────────────────────────────────
+    function useReveal(threshold=0.06) {
+      const ref = useRef(null);
+      const [vis, setVis] = useState(false);
+      useEffect(() => {
+        const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold });
+        if (ref.current) obs.observe(ref.current);
+        return () => obs.disconnect();
+      }, [threshold]);
+      return [ref, vis];
+    }
+    function useScrollPct() {
+      const [p, setP] = useState(0);
+      useEffect(() => {
+        const fn = () => {
+          const el = document.documentElement;
+          setP(Math.min(1, el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight)));
+        };
+        window.addEventListener("scroll", fn, { passive: true });
+        return () => window.removeEventListener("scroll", fn);
+      }, []);
+      return p;
+    }
+    function useScrollY() {
+      const [y, setY] = useState(0);
+      useEffect(() => {
+        const fn = () => setY(window.scrollY);
+        window.addEventListener("scroll", fn, { passive: true });
+        return () => window.removeEventListener("scroll", fn);
+      }, []);
+      return y;
+    }
+    function useRAF(cb, active=true) {
+      const r = useRef(cb); r.current = cb;
+      useEffect(() => {
+        if (!active) return;
+        let id, prev = performance.now();
+        const loop = now => { r.current(now - prev); prev = now; id = requestAnimationFrame(loop); };
+        id = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(id);
+      }, [active]);
+    }
+    function useTick(ms=33) {
+      const [t, setT] = useState(0);
+      useEffect(() => { const id = setInterval(() => setT(p => p+1), ms); return () => clearInterval(id); }, [ms]);
+      return t;
+    }
+
+    // ── REVEAL ────────────────────────────────────────────────────────────────
+    function Reveal({ children, delay=0, dy=50, blur=true }) {
+      const [ref, vis] = useReveal(0.05);
+      return (
+        <div ref={ref} style={{
+          opacity: vis ? 1 : 0,
+          transform: vis ? "none" : `translateY(${dy}px)`,
+          filter: blur ? (vis ? "blur(0px)" : "blur(8px)") : "none",
+          transition: `opacity 1s ${SPRING} ${delay}s, transform 1s ${SPRING} ${delay}s, filter .75s ease ${delay}s`,
+        }}>
+          {children}
+        </div>
+      );
+    }
+
+    // ── NMR BACKGROUND CANVAS ─────────────────────────────────────────────────
+    function NMRBackground() {
+      const canvasRef = useRef(null);
+      const stateRef = useRef({ particles: [], t: 0, opacity: 0 });
+      const scrollY = useScrollY();
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = () => window.innerWidth;
+        const H = () => window.innerHeight;
+
+        const resize = () => { canvas.width = W(); canvas.height = H(); };
+        resize();
+        window.addEventListener('resize', resize);
+
+        // Initialize spinning nucleus particles
+        const labels = ['¹H','¹³C','¹⁹F','³¹P','¹⁵N','¹H'];
+        const colors = ['#4AA8FF','#00BFA8','#2EC4E0','#7A9FFF','#00D4A4','#C9A96E'];
+        stateRef.current.particles = Array.from({length: 28}, (_, i) => ({
+          x: Math.random() * W(),
+          y: Math.random() * H(),
+          vx: (Math.random()-0.5)*0.18,
+          vy: -0.12 - Math.random()*0.22,
+          r: 2.5 + Math.random()*2.5,
+          phase: Math.random()*Math.PI*2,
+          speed: 0.008 + Math.random()*0.012,
+          color: colors[i % colors.length],
+          label: labels[i % labels.length],
+          orbitAngle: Math.random()*Math.PI*2,
+          orbitSpeed: (Math.random()-0.5)*0.03,
+        }));
+
+        let frameId;
+        let lastT = performance.now();
+
+        const draw = (now) => {
+          const dt = now - lastT;
+          lastT = now;
+          stateRef.current.t += dt * 0.001;
+          const t = stateRef.current.t;
+
+          // Target opacity: 0 in hero, rises to 1 after hero
+          const heroH = H();
+          const targetOpacity = Math.min(1, Math.max(0, (window.scrollY - heroH * 0.3) / (heroH * 0.5)));
+          stateRef.current.opacity += (targetOpacity - stateRef.current.opacity) * 0.04;
+          const op = stateRef.current.opacity;
+
+          canvas.width = canvas.width; // clear
+          if (op < 0.01) { frameId = requestAnimationFrame(draw); return; }
+
+          // Background
+          ctx.fillStyle = '#06060e';
+          ctx.fillRect(0, 0, W(), H());
+
+          ctx.globalAlpha = op;
+
+          // Field lines (sine waves representing B₀)
+          const numLines = 9;
+          for (let i = 0; i < numLines; i++) {
+            const yBase = (H() / (numLines + 1)) * (i + 1);
+            const phase = t * 0.22 + i * 0.85;
+            const amp = 12 + 5*Math.sin(t*0.3 + i);
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(77, 163, 255, ${0.04 + 0.025*Math.sin(t*0.4+i)})`;
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= W(); x += 3) {
+              const y = yBase + amp * Math.sin((x / 110) + phase);
+              if (x === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+          }
+
+          // Particles (spinning nuclei)
+          stateRef.current.particles.forEach(p => {
+            p.orbitAngle += p.orbitSpeed;
+            p.phase += p.speed;
+            p.x += p.vx + 0.25*Math.sin(p.phase*0.7);
+            p.y += p.vy;
+
+            if (p.y < -30) { p.y = H()+30; p.x = Math.random()*W(); }
+            if (p.x < -30) p.x = W()+30;
+            if (p.x > W()+30) p.x = -30;
+
+            // Glow
+            const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*5);
+            grd.addColorStop(0, p.color+'44');
+            grd.addColorStop(1, p.color+'00');
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r*5, 0, Math.PI*2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+
+            // Orbit ring (precession cone trace)
+            const orbitRx = p.r * 3.5;
+            const orbitRy = p.r * 1;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.orbitAngle * 0.1);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, orbitRx, orbitRy, 0, 0, Math.PI*2);
+            ctx.strokeStyle = p.color+'30';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+            ctx.restore();
+
+            // Nucleus dot
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+          });
+
+          ctx.globalAlpha = 1;
+          frameId = requestAnimationFrame(draw);
+        };
+
+        frameId = requestAnimationFrame(draw);
+        return () => {
+          cancelAnimationFrame(frameId);
+          window.removeEventListener('resize', resize);
+        };
+      }, []);
+
+      return (
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: 'none',
+            width: '100%',
+            height: '100%',
+          }}
+        />
+      );
+    }
+
+    // ── SIDE NAVIGATION ───────────────────────────────────────────────────────
+    function SideNav() {
+      const [active, setActive] = useState(0);
+      useEffect(() => {
+        const els = NAV_SECTIONS.map(s => document.getElementById(s.id)).filter(Boolean);
+        const obs = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) {
+              const idx = NAV_SECTIONS.findIndex(s => s.id === e.target.id);
+              if (idx !== -1) setActive(idx);
+            }
+          });
+        }, { threshold: 0.35 });
+        els.forEach(el => obs.observe(el));
+        return () => obs.disconnect();
+      }, []);
+      return (
+        <div className="side-nav">
+          {NAV_SECTIONS.map((s, i) => (
+            <button
+              key={s.id}
+              className={`side-nav-dot ${i===active?'active':''}`}
+              onClick={() => document.getElementById(s.id)?.scrollIntoView({behavior:'smooth'})}
+            >
+              <span className="tooltip">{s.label}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    // ── PRIMITIVES ────────────────────────────────────────────────────────────
+    function Section({ children, bg=C.bg, id }) {
+      return (
+        <section id={id} style={{ background: bg }} className="section">
+          <div className="max-w" style={{position:'relative',zIndex:1}}>{children}</div>
+        </section>
+      );
+    }
+    function Label({ children, color=C.gold }) {
+      return (
+        <p style={{ fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color, margin:"0 0 14px", display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{display:'inline-block',width:24,height:1,background:color,opacity:0.6}}/>
+          {children}
+        </p>
+      );
+    }
+    function H({ children, white=true, size="clamp(28px,3.8vw,52px)" }) {
+      return (
+        <h2 style={{
+          fontSize: size,
+          fontWeight: 700,
+          lineHeight: 1.1,
+          letterSpacing: "-0.018em",
+          color: white ? "#f0f0f8" : C.text,
+          margin:"0 0 22px",
+          fontFamily: "'Cormorant Garamond', Georgia, serif",
+        }}>
+          {children}
+        </h2>
+      );
+    }
+    function P({ children, size=16, white=true }) {
+      return <p style={{ fontSize:size, lineHeight:1.82, color: white ? C.textSec : "#4a4a6a", margin:"0 0 18px" }}>{children}</p>;
+    }
+    function Fml({ children, size=19 }) {
+      return (
+        <div style={{ background:"rgba(77,163,255,0.08)", border:`1px solid rgba(77,163,255,0.2)`, borderRadius:12, padding:"13px 22px", display:"inline-flex", margin:"10px 0" }}>
+          <span style={{ fontFamily:"'Cormorant Garamond','Georgia',serif", fontStyle:"italic", fontSize:size, color:"#c0d8ff" }}>{children}</span>
+        </div>
+      );
+    }
+    function Chip({ children, color=C.blue }) {
+      return (
+        <span style={{ display:"inline-flex", padding:"5px 13px", borderRadius:20, background:color+"18", border:`1px solid ${color}30`, color, fontSize:13, fontWeight:600, margin:"0 6px 8px 0" }}>
+          {children}
+        </span>
+      );
+    }
+    function Callout({ children, color=C.blue, bg }) {
+      return (
+        <div style={{ background: bg||(color+"10"), border:`1px solid ${color}30`, borderRadius:13, padding:"14px 18px", margin:"13px 0" }}>
+          <p style={{ fontSize:14, lineHeight:1.72, color:C.text, margin:0 }}>{children}</p>
+        </div>
+      );
+    }
+    function InfoCard({ icon, title, text, accent=C.blue }) {
+      return (
+        <div className="card-hover glass-light" style={{ borderRadius:18, padding:"22px 20px", borderTop:`2px solid ${accent}40` }}>
+          <div style={{ fontSize:26, marginBottom:11 }}>{icon}</div>
+          <p style={{ fontWeight:700, fontSize:15, color:accent, margin:"0 0 8px" }}>{title}</p>
+          <p style={{ fontSize:13, lineHeight:1.68, color:C.textSec, margin:0 }}>{text}</p>
+        </div>
+      );
+    }
+
+    // ── CHECKPOINT QUIZ ───────────────────────────────────────────────────────
+    function CheckpointQuiz({ questions, moduleLabel }) {
+      const [cur, setCur] = useState(0);
+      const [sel, setSel] = useState(null);
+      const [score, setScore] = useState(0);
+      const [done, setDone] = useState(false);
+      const q = questions[cur];
+
+      const pick = i => {
+        if (sel !== null) return;
+        setSel(i);
+        if (i === q.ans) setScore(s => s+1);
+      };
+      const next = () => {
+        if (cur < questions.length-1) { setCur(c=>c+1); setSel(null); }
+        else setDone(true);
+      };
+      const reset = () => { setCur(0); setSel(null); setScore(0); setDone(false); };
+
+      if (done) return (
+        <div className="checkpoint-wrap" style={{textAlign:'center', padding:'32px 24px'}}>
+          <div style={{fontSize:44, marginBottom:10}}>{score===questions.length?'🏆':score>0?'✅':'📚'}</div>
+          <p style={{fontFamily:"'Cormorant Garamond',serif", fontSize:26, color:C.gold, fontWeight:600, marginBottom:6}}>
+            {score}/{questions.length} correct
+          </p>
+          <p style={{fontSize:13, color:C.textSec, marginBottom:20}}>{score===questions.length?"Perfect score!":score>0?"Well done — review the explanations above.":"Keep practising!"}</p>
+          <button onClick={reset} style={{padding:'10px 28px', background:'transparent', border:`1.5px solid ${C.gold}`, color:C.gold, borderRadius:10, cursor:'pointer', fontWeight:600, fontSize:13}}>Try again ↺</button>
+        </div>
+      );
+
+      return (
+        <div className="checkpoint-wrap">
+          <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:18}}>
+            <div style={{width:32, height:32, borderRadius:'50%', background:C.goldSoft, border:`1.5px solid ${C.gold}50`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16}}>🧠</div>
+            <div>
+              <p style={{fontWeight:700, fontSize:12, color:C.gold, textTransform:'uppercase', letterSpacing:'0.1em', margin:0}}>Quick Check · {moduleLabel}</p>
+              <p style={{fontSize:11, color:C.textTer, margin:0}}>Question {cur+1} of {questions.length}</p>
+            </div>
+            <div style={{marginLeft:'auto', fontSize:13, fontWeight:700, color:C.gold}}>{score}/{cur} ✓</div>
+          </div>
+          <div style={{height:2, background:'rgba(201,169,110,0.12)', borderRadius:1, marginBottom:16}}>
+            <div style={{height:'100%', background:C.gold, borderRadius:1, width:`${(cur/questions.length)*100}%`, transition:'width .5s ease'}}/>
+          </div>
+          <div style={{background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'16px 18px', marginBottom:13, border:`1px solid rgba(255,255,255,0.08)`}}>
+            <p style={{fontWeight:600, fontSize:15, color:C.text, lineHeight:1.58, margin:0}}>{q.q}</p>
+          </div>
+          <div style={{display:'flex', flexDirection:'column', gap:9, marginBottom:12}}>
+            {q.opts.map((opt,i)=>{
+              let bg='rgba(255,255,255,0.04)', border='rgba(255,255,255,0.1)', color=C.text;
+              if (sel!==null) {
+                if (i===q.ans){bg='rgba(0,191,168,0.1)';border=C.green;color=C.green;}
+                else if(i===sel){bg='rgba(255,124,110,0.1)';border=C.red;color=C.red;}
+              }
+              return (
+                <button key={i} onClick={()=>pick(i)} style={{background:bg, border:`1.5px solid ${border}`, borderRadius:10, padding:'11px 15px', textAlign:'left', cursor:sel!==null?'default':'pointer', color, fontSize:14, fontWeight:i===q.ans&&sel!==null?700:400, transition:'all .22s', minHeight:44}}>
+                  <span style={{color:C.textTer, marginRight:10, fontWeight:600}}>{['A','B','C','D'][i]}.</span>{opt}
+                </button>
+              );
+            })}
+          </div>
+          {sel!==null&&(
+            <div>
+              <div className="fade-up" style={{background:'rgba(255,255,255,0.04)', borderRadius:12, padding:'13px 16px', marginBottom:12, border:`1px solid rgba(255,255,255,0.08)`}}>
+                <p style={{fontWeight:700, color:sel===q.ans?C.green:C.red, marginBottom:6, fontSize:14}}>{sel===q.ans?"Correct! ✓":"Incorrect — see the highlighted answer."}</p>
+                <p style={{color:C.textSec, fontSize:13.5, lineHeight:1.72, margin:0}}>{q.exp}</p>
+              </div>
+              {cur < questions.length-1
+                ? <button onClick={next} style={{width:'100%', background:C.gold, color:'#06060e', border:'none', borderRadius:10, padding:'13px', fontSize:14, cursor:'pointer', fontWeight:700}}>Next question →</button>
+                : <button onClick={next} style={{width:'100%', background:C.green, color:'#06060e', border:'none', borderRadius:10, padding:'13px', fontSize:14, cursor:'pointer', fontWeight:700}}>Complete ✓</button>
+              }
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── PROGRESS BAR ──────────────────────────────────────────────────────────
+    function ProgressBar() {
+      const pct = useScrollPct();
+      return (
+        <div style={{ position:"fixed", top:0, left:0, right:0, zIndex:9000, height:2.5, pointerEvents:"none" }}>
+          <div style={{ height:"100%", background:`linear-gradient(90deg,${C.gold},#f5dfa0,${C.blue})`, width:`${pct*100}%`, transition:"width .1s linear", boxShadow:`0 0 12px ${C.gold}88` }} />
+        </div>
+      );
+    }
+
+    // ── FLOATING ATOMS (hero) ─────────────────────────────────────────────────
+    function FloatingAtoms() {
+      const t = useTick(38);
+      const atoms = [
+        {bx:70,by:220,r:30,sp:0.9,color:C.blue,label:"¹H"},
+        {bx:260,by:130,r:24,sp:1.25,color:C.green,label:"¹³C"},
+        {bx:470,by:250,r:26,sp:0.75,color:C.orange,label:"¹⁹F"},
+        {bx:650,by:160,r:20,sp:1.45,color:"#7A9FFF",label:"³¹P"},
+        {bx:160,by:340,r:19,sp:1.05,color:C.purple,label:"¹⁵N"},
+        {bx:560,by:90,r:22,sp:0.85,color:C.gold,label:"¹H"},
+        {bx:380,by:380,r:17,sp:1.3,color:"#2EC4E0",label:"¹³C"},
+        {bx:740,by:300,r:21,sp:0.95,color:C.green,label:"¹H"},
+      ];
+      return (
+        <svg width="100%" height="100%" style={{position:"absolute",inset:0,opacity:.5}} viewBox="0 0 820 440" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          {/* Field lines */}
+          {[1,2,3].map(i=>{
+            const pts=Array.from({length:50},(_,j)=>{const x=j*17;const y=100+i*80+12*Math.sin(x/60+t*.025*i);return`${x},${y}`;}).join(' ');
+            return <polyline key={i} points={pts} fill="none" stroke={C.blue} strokeWidth={0.6} opacity={0.12}/>;
+          })}
+          {atoms.map((a,i)=>{
+            const wx=a.bx+14*Math.sin(t*.03*a.sp+i);
+            const wy=a.by+9*Math.cos(t*.025*a.sp+i*1.4);
+            const ang=(t*a.sp*3.2+i*60)%360;
+            const rad=ang*Math.PI/180;
+            const orbitRx=a.r*1.1, orbitRy=a.r*0.4;
+            const ox=wx+orbitRx*Math.cos(rad), oy=wy+orbitRy*Math.sin(rad);
+            return (
+              <g key={i} filter="url(#glow)">
+                <circle cx={wx} cy={wy} r={a.r+14} fill={a.color} opacity={.07}/>
+                <circle cx={wx} cy={wy} r={a.r+6} fill={a.color} opacity={.13}/>
+                <circle cx={wx} cy={wy} r={a.r} fill={a.color} opacity={.55}/>
+                <text x={wx} y={wy+5} textAnchor="middle" fill="white" fontSize={12} fontWeight={700} fontFamily="DM Sans,sans-serif">{a.label}</text>
+                <ellipse cx={wx} cy={wy} rx={orbitRx} ry={orbitRy} fill="none" stroke={a.color} strokeWidth={0.8} opacity={0.3}/>
+                <line x1={wx} y1={wy} x2={ox} y2={oy} stroke={a.color} strokeWidth={1.5} opacity={.7}/>
+                <circle cx={ox} cy={oy} r={4} fill={a.color} opacity={.9}/>
+              </g>
+            );
+          })}
+        </svg>
+      );
+    }
+
+    // ── YOUTUBE EMBED ─────────────────────────────────────────────────────────
+    function VideoEmbed({ id, title, caption }) {
+      const [playing, setPlaying] = useState(false);
+      const [hov, setHov] = useState(false);
+      return (
+        <div style={{marginTop:36, marginBottom:8}}>
+          <div style={{borderRadius:20, overflow:"hidden", boxShadow:"0 16px 64px rgba(0,0,0,.5)", border:`1px solid ${C.border}`, position:"relative"}}>
+            {playing ? (
+              <div style={{position:"relative",paddingTop:"56.25%"}}>
+                <iframe style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                  src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`}
+                  title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+              </div>
+            ) : (
+              <div onClick={()=>setPlaying(true)} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+                style={{cursor:"pointer",position:"relative",paddingTop:"56.25%",background:"#000"}}>
+                <img src={`https://img.youtube.com/vi/${id}/maxresdefault.jpg`} alt={title}
+                  onError={e=>{e.target.src=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;}}
+                  style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",opacity:hov?.78:1,transition:"opacity .2s"}}/>
+                <div style={{position:"absolute",inset:0,background:hov?"rgba(0,0,0,.3)":"rgba(0,0,0,.15)",transition:"background .2s"}}/>
+                <div style={{position:"absolute",top:"50%",left:"50%",transform:`translate(-50%,-50%) scale(${hov?1.1:1})`,width:72,height:72,borderRadius:"50%",background:hov?"#ff0000":"rgba(0,0,0,.7)",display:"flex",alignItems:"center",justifyContent:"center",transition:"all .22s",boxShadow:`0 4px 32px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,0.1)`}}>
+                  <svg width={28} height={28} viewBox="0 0 24 24" fill="white"><polygon points="8,5 19,12 8,19"/></svg>
+                </div>
+              </div>
+            )}
+          </div>
+          {caption&&<p style={{fontSize:13,color:C.textTer,marginTop:10,textAlign:"center",fontStyle:"italic"}}>{playing?"▶ Playing: ":"▶ "}{caption}</p>}
+        </div>
+      );
+    }
+
+    // ── PRECESSING NUCLEUS ────────────────────────────────────────────────────
+    function Nucleus({ spinUp=true, color=C.blue, label="¹H", speed=1, sc=1 }) {
+      const [ang, setAng] = useState(0);
+      useRAF(dt => setAng(a => (a+speed*dt*.18)%360));
+      const W=118*sc, H=188*sc, cx=W/2, rx=40*sc, ry=11*sc;
+      const cY=spinUp?H*.73:H*.27;
+      const rad=ang*Math.PI/180, nx=cx+rx*Math.cos(rad), ny=cY+ry*Math.sin(rad);
+      const front=Math.sin(rad)>=0, r=13*sc, uid=`n${label}${spinUp}${sc}`;
+      return (
+        <svg width={W} height={H} style={{overflow:"visible",maxWidth:"100%"}}>
+          <defs>
+            <radialGradient id={uid} cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="white" stopOpacity=".55"/>
+              <stop offset="100%" stopColor={color} stopOpacity="1"/>
+            </radialGradient>
+          </defs>
+          <line x1={cx} y1={8} x2={cx} y2={H-8} stroke="rgba(255,255,255,0.2)" strokeWidth={1.5} strokeDasharray="5,4"/>
+          <polygon points={`${cx-5},12 ${cx+5},12 ${cx},3`} fill={C.blue} opacity={.8}/>
+          <text x={cx+10} y={16} fill={C.blue} fontSize={11*sc} fontStyle="italic" fontFamily="Cormorant Garamond,serif">B&#x2080;</text>
+          {!front&&<><line x1={cx} y1={cY} x2={nx} y2={ny} stroke={color} strokeWidth={2*sc} opacity={.18}/><circle cx={nx} cy={ny} r={r} fill={color} opacity={.18}/></>}
+          <path d={`M ${cx-rx} ${cY} A ${rx} ${ry} 0 0 0 ${cx+rx} ${cY}`} fill="none" stroke={color} strokeWidth={2} opacity={.5}/>
+          {front&&<><line x1={cx} y1={cY} x2={nx} y2={ny} stroke={color} strokeWidth={3*sc}/><circle cx={nx} cy={ny} r={r} fill={`url(#${uid})`} style={{filter:`drop-shadow(0 0 ${8*sc}px ${color}99)`}}/><text x={nx} y={ny+5*sc} textAnchor="middle" fill="white" fontSize={10*sc} fontWeight="700">{label}</text></>}
+          <circle cx={cx} cy={cY} r={4*sc} fill={color} opacity={.5}/>
+          <text x={cx} y={H-2} textAnchor="middle" fill={color} fontSize={11*sc} fontWeight={600}>{spinUp?"α ↑ spin ½":"β ↓ spin −½"}</text>
+        </svg>
+      );
+    }
+
+    // ── SPIN GRID ─────────────────────────────────────────────────────────────
+    function SpinGrid({ mode }) {
+      const t = useTick(33);
+      return (
+        <svg width={190} height={140} style={{overflow:"visible",maxWidth:"100%"}}>
+          {Array.from({length:12}).map((_,i)=>{
+            const col=i%4,row=Math.floor(i/4),cx=24+col*46,cy=22+row*44;
+            const deg=mode==="random"?(i*137.5+t*.5)%360:mode==="aligned"?(i%4!==0?0:180):90+28*Math.sin(t*.065+i*.9);
+            const color=mode==="aligned"?(i%4!==0?C.blue:C.purple):mode==="tipped"?C.orange:"rgba(144,144,168,0.6)";
+            const rad=(deg-90)*Math.PI/180,len=13;
+            const ex=cx+len*Math.cos(rad),ey=cy+len*Math.sin(rad),sx=cx-len*Math.cos(rad),sy=cy-len*Math.sin(rad);
+            return (
+              <g key={i}>
+                <circle cx={cx} cy={cy} r={13} fill="rgba(255,255,255,0.04)" stroke={color} strokeWidth={1.2} opacity={.7}/>
+                <line x1={sx} y1={sy} x2={ex} y2={ey} stroke={color} strokeWidth={2.5}/>
+                <polygon points={`${ex},${ey} ${ex-6*Math.cos(rad-.4)},${ey-6*Math.sin(rad-.4)} ${ex-6*Math.cos(rad+.4)},${ey-6*Math.sin(rad+.4)}`} fill={color}/>
+              </g>
+            );
+          })}
+        </svg>
+      );
+    }
+
+    // ── ENERGY DIAGRAM ────────────────────────────────────────────────────────
+    function EnergyDiag() {
+      return (
+        <svg width={270} height={210} style={{overflow:"visible",maxWidth:"100%"}}>
+          <text x={135} y={18} textAnchor="middle" fill={C.textSec} fontSize={12} fontWeight={600}>Energy levels in B&#x2080;</text>
+          <rect x={20} y={45} width={185} height={3} fill={C.purple} rx={1.5}/>
+          <text x={212} y={51} fill={C.purple} fontSize={13} fontWeight={600}>β  m = −½</text>
+          <text x={212} y={65} fill={C.textSec} fontSize={10}>high energy</text>
+          <rect x={20} y={158} width={185} height={3} fill={C.blue} rx={1.5}/>
+          <text x={212} y={164} fill={C.blue} fontSize={13} fontWeight={600}>α  m = +½</text>
+          <text x={212} y={178} fill={C.textSec} fontSize={10}>low energy</text>
+          <defs><marker id="Earr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polygon points="0,0 8,4 0,8" fill={C.seafoam}/></marker></defs>
+          <line x1={118} y1={156} x2={118} y2={51} stroke={C.seafoam} strokeWidth={2} markerEnd="url(#Earr)" strokeDasharray="5,3"/>
+          <text x={134} y={107} fill={C.seafoam} fontSize={13} fontFamily="Cormorant Garamond,serif" fontStyle="italic">ΔE = γℏB&#x2080;</text>
+          {[40,66,92,118].map(x=><circle key={x} cx={x} cy={158} r={6} fill={C.blue} opacity={.7}/>)}
+          {[55,100,145].map(x=><circle key={x} cx={x} cy={45} r={6} fill={C.purple} opacity={.7}/>)}
+        </svg>
+      );
+    }
+
+    // ── FID / RF / FOURIER ────────────────────────────────────────────────────
+    function FIDWave() {
+      const [p, setP] = useState(0);
+      useEffect(()=>{setP(0);const id=setInterval(()=>setP(v=>v>=100?0:v+1.4),22);return()=>clearInterval(id);},[]);
+      const pts=Array.from({length:Math.floor(p/100*68)},(_,i)=>`${8+i*2.1},${54+29*Math.exp(-i/25)*Math.cos(i*.52)}`);
+      return (
+        <svg width={155} height={110} style={{maxWidth:"100%"}}>
+          <text x={77} y={14} textAnchor="middle" fill={C.textSec} fontSize={11} fontWeight={600}>FID Signal</text>
+          <line x1={8} y1={54} x2={148} y2={54} stroke={C.border} strokeWidth={1}/>
+          {pts.length>1&&<path d={"M "+pts.join(" L ")} fill="none" stroke={C.seafoam} strokeWidth={2.5} style={{filter:`drop-shadow(0 0 5px ${C.seafoam}88)`}}/>}
+          <text x={77} y={104} textAnchor="middle" fill={C.textSec} fontSize={10}>time →</text>
+        </svg>
+      );
+    }
+    function RFWave() {
+      const t=useTick(30);
+      const pts=Array.from({length:55},(_,i)=>`${8+i*2.4},${50+27*Math.sin((i+t)*.45)}`).join(" ");
+      return (
+        <svg width={145} height={105} style={{maxWidth:"100%"}}>
+          <text x={72} y={14} textAnchor="middle" fill={C.orange} fontSize={11} fontWeight={600}>RF Pulse at ν&#x2080;</text>
+          <line x1={8} y1={50} x2={138} y2={50} stroke={C.border} strokeWidth={1}/>
+          <polyline points={pts} fill="none" stroke={C.orange} strokeWidth={2.5} opacity={.9}/>
+          <text x={72} y={100} textAnchor="middle" fill={C.textSec} fontSize={10}>Resonance excitation</text>
+        </svg>
+      );
+    }
+    function FourierViz() {
+      const t=useTick(40);
+      const fidPts=Array.from({length:46},(_,i)=>`${5+i*1.7},${28+15*Math.exp(-i/19)*Math.cos(i*.56+t*.04)}`).join(" ");
+      const peaks=[{x:24,h:46,c:C.blue},{x:60,h:29,c:C.seafoam},{x:100,h:40,c:C.purple}];
+      return (
+        <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",justifyContent:"center"}}>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:10,color:C.textSec,marginBottom:4,fontWeight:600}}>Time domain (FID)</div>
+            <svg width={82} height={58}><line x1={5} y1={28} x2={79} y2={28} stroke={C.border} strokeWidth={1}/><polyline points={fidPts} fill="none" stroke={C.seafoam} strokeWidth={1.5}/></svg>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{color:C.purple,fontSize:20}}>⟶</div>
+            <div style={{color:C.textSec,fontSize:9,fontWeight:600}}>Fourier<br/>transform</div>
+          </div>
+          <div style={{textAlign:"center"}}>
+            <div style={{fontSize:10,color:C.textSec,marginBottom:4,fontWeight:600}}>Frequency domain</div>
+            <svg width={122} height={58}>
+              <line x1={5} y1={54} x2={118} y2={54} stroke={C.border} strokeWidth={1}/>
+              {peaks.map(pk=>(<g key={pk.x}><line x1={pk.x} y1={54} x2={pk.x} y2={54-pk.h} stroke={pk.c} strokeWidth={4} style={{filter:`drop-shadow(0 0 5px ${pk.c})`}}/><ellipse cx={pk.x} cy={54-pk.h/2} rx={7} ry={pk.h/2} fill={pk.c} opacity={.13}/></g>))}
+            </svg>
+          </div>
+        </div>
+      );
+    }
+
+    // ── BOLTZMANN CALCULATOR ──────────────────────────────────────────────────
+    function BoltzCalc() {
+      const [B, setB] = useState(14.1);
+      const gamma=26.752e7,hbar=1.054571817e-34,k=1.380649e-23,T=300;
+      const excess=gamma*hbar*B/(k*T);
+      const excessPpm=Math.round(excess*1e6);
+      const nuMHz=(gamma*B/(2*Math.PI)/1e6).toFixed(1);
+      return (
+        <div className="glass-light" style={{borderRadius:18,padding:"26px 22px"}}>
+          <p style={{fontWeight:700,fontSize:17,color:C.text,margin:"0 0 6px",fontFamily:"'Cormorant Garamond',serif"}}>Boltzmann Distribution Calculator for ¹H</p>
+          <p style={{fontSize:13,color:C.textSec,margin:"0 0 18px"}}>Drag the slider to change B&#x2080; and observe how sensitivity changes.</p>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
+            <span style={{fontSize:12,color:C.textSec}}>1 T</span>
+            <input type="range" min={1} max={21} step={0.1} value={B} onChange={e=>setB(Number(e.target.value))} style={{flex:1,accentColor:C.gold}}/>
+            <span style={{fontSize:12,color:C.textSec}}>21 T</span>
+          </div>
+          <div style={{textAlign:"center",marginBottom:20}}>
+            <span style={{fontSize:40,fontWeight:700,color:C.gold,fontFamily:"'Cormorant Garamond',serif"}}>{B.toFixed(1)}</span>
+            <span style={{fontSize:15,color:C.textSec,marginLeft:6}}>Tesla</span>
+          </div>
+          <div className="grid-2" style={{gap:10,marginBottom:14}}>
+            {[
+              {label:"Larmor freq. (¹H)",value:`${nuMHz} MHz`,color:C.blue},
+              {label:"Excess α-spins",value:`${excessPpm} per 10⁶`,color:C.seafoam},
+              {label:"Nβ / Nα ratio",value:(1-excess).toFixed(6),color:C.orange},
+              {label:"Relative signal",value:`${Math.round(B**1.75)}×`,color:C.purple},
+            ].map(({label,value,color})=>(
+              <div key={label} className="glass" style={{borderRadius:11,padding:"12px 14px"}}>
+                <p style={{fontSize:10,color:C.textSec,margin:"0 0 4px",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.06em"}}>{label}</p>
+                <p style={{fontSize:18,fontWeight:700,color,margin:0,fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic"}}>{value}</p>
+              </div>
+            ))}
+          </div>
+          <Callout color={C.blue}>
+            <strong>Key insight:</strong> At {B.toFixed(1)} T, only {excessPpm} in every 1,000,000 ¹H spins contribute net signal. This fundamental sensitivity limitation explains the need for strong magnets, concentrated samples, and repeated scan averaging.
+          </Callout>
+        </div>
+      );
+    }
+
+    // ── KARPLUS CURVE ─────────────────────────────────────────────────────────
+    function KarplusCurve() {
+      const [theta,setTheta]=useState(60);
+      const J=t=>Math.max(0,7*Math.cos(t*Math.PI/180)**2-1*Math.cos(t*Math.PI/180)+5);
+      // Layout: left margin 36px so circles at θ=0 don't touch y-axis
+      // Plot: x from L=36 to R=36+220=256, y from T=12 to B=145
+      const L=36, R=256, T=12, B=145, W=280, H=175;
+      const xOf = deg => L + (deg/180)*(R-L);
+      const yOf = j   => B  - (j/14)*(B-T);   // 0-14 Hz range fits nicely
+      const pts = Array.from({length:181},(_,i)=>`${xOf(i).toFixed(1)},${yOf(J(i)).toFixed(1)}`).join(" ");
+      const curX = xOf(theta);
+      const curY = yOf(J(theta));
+      // Flip label side based on position
+      const labelLeft = curX > R - 55;
+      const labelTop  = curY < T + 18;           // flip below dot if too close to top
+      return (
+        <div className="glass-light" style={{borderRadius:18,padding:"22px 20px"}}>
+          <p style={{fontWeight:700,fontSize:15,color:C.text,margin:"0 0 4px",fontFamily:"'Cormorant Garamond',serif"}}>Karplus Equation</p>
+          <p style={{fontSize:13,color:C.textSec,margin:"0 0 12px",fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic"}}>
+            ³J<sub style={{fontSize:"0.75em",fontStyle:"normal"}}>HH</sub> = A cos²θ − B cosθ + C
+          </p>
+          <div style={{overflowX:"auto"}}>
+            <svg width={W} height={H} style={{display:"block",margin:"0 auto",overflow:"visible"}}>
+              <defs>
+                <filter id="kDotGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              {/* Axes */}
+              <line x1={L} y1={T} x2={L} y2={B+6} stroke={C.border} strokeWidth={1}/>
+              <line x1={L-4} y1={B} x2={R+4} y2={B} stroke={C.border} strokeWidth={1}/>
+              {/* Curve */}
+              <polyline points={pts} fill="none" stroke={C.blue} strokeWidth={2.5} strokeLinejoin="round"/>
+              {/* X-axis ticks */}
+              {[0,60,120,180].map(d=>(
+                <g key={d}>
+                  <line x1={xOf(d)} y1={B} x2={xOf(d)} y2={B+5} stroke={C.border}/>
+                  <text x={xOf(d)} y={B+16} fill={C.textSec} fontSize={10} textAnchor="middle">{d}°</text>
+                </g>
+              ))}
+              {/* Y-axis ticks */}
+              {[0,4,8,12].map(j=>(
+                <g key={j}>
+                  <line x1={L-4} y1={yOf(j)} x2={L} y2={yOf(j)} stroke={C.border}/>
+                  <text x={L-7} y={yOf(j)+4} fill={C.textSec} fontSize={9} textAnchor="end">{j}</text>
+                </g>
+              ))}
+              <text x={L-18} y={(T+B)/2+4} textAnchor="middle" fill={C.textSec} fontSize={9} transform={`rotate(-90,${L-18},${(T+B)/2})`}>Hz</text>
+              {/* Cursor vertical dashed line — from curve point DOWN to baseline */}
+              <line
+                x1={curX} y1={Math.min(curY+7, B)}
+                x2={curX} y2={B}
+                stroke={C.seafoam} strokeWidth={1.5} strokeDasharray="4,3" opacity={0.7}
+              />
+              {/* Cursor dot */}
+              <circle cx={curX} cy={curY} r={7} fill={C.seafoam} filter="url(#kDotGlow)" opacity={0.95}/>
+              {/* Label: side + above/below based on position */}
+              <text
+                x={labelLeft ? curX-12 : curX+12}
+                y={labelTop  ? curY+18  : curY-10}
+                fill={C.seafoam}
+                fontSize={11}
+                fontWeight={700}
+                textAnchor={labelLeft ? "end" : "start"}
+              >{J(theta).toFixed(1)} Hz</text>
+            </svg>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:4}}>
+            <span style={{fontSize:13,color:C.textSec,minWidth:60}}>θ = {theta}°</span>
+            <input type="range" min={0} max={180} value={theta} onChange={e=>setTheta(Number(e.target.value))} style={{flex:1,accentColor:C.seafoam}}/>
+          </div>
+          <Callout color={C.orange} bg={C.orangeSoft}>
+            <strong>Structural application:</strong> Alpha-helices (φ ≈ −60°, θ ≈ 60°) give small ³J values (~4 Hz). Beta-sheets (φ ≈ −120°, θ ≈ 150°) give large ³J values (~9 Hz). This allows NMR to detect protein secondary structure directly from coupling constants.
+          </Callout>
+        </div>
+      );
+    }
+
+    // ── 2D NMR ────────────────────────────────────────────────────────────────
+    function TwoDNMR() {
+      const [mode,setMode]=useState("COSY");
+      // Plot box constants — generous padding so dots never clip
+      const L=48, R=282, T=10, B=220, PW=R-L, PH=B-T; // plot area in SVG coords
+      const W=300, H=260;
+
+      const desc={
+        COSY:"Proton-proton scalar coupling through 2–3 bonds (J-coupling)",
+        NOESY:"Proton-proton proximity in 3D space — NOE intensity ∝ r⁻⁶, r < 5 Å",
+        HSQC:"One-bond ¹H–¹³C correlation: one cross-peak per CH group",
+      };
+      const colors={COSY:C.blue,NOESY:C.orange,HSQC:C.seafoam};
+
+      // COSY/NOESY: both axes are ¹H 0–6 ppm
+      // HSQC: x = ¹H 0–6 ppm, y = ¹³C 0–200 ppm (high ¹³C = high on plot)
+      const peaks={
+        COSY: [[1,3],[2,4],[3,1],[4,2],[2.5,1.5],[1.5,2.5]],
+        NOESY:[[1,2.8],[2.8,1],[3,5],[5,3],[1.5,4],[4,1.5]],
+        // [¹H, ¹³C] — real-world values: CH₃(1/18), CH₂(2/25), CH(3/55), CH-O(4/127), CH=O(5/165)
+        HSQC: [[1,18],[2,25],[3,55],[4,127],[5,165]],
+      };
+
+      // Coordinate mappers
+      const xH  = h   => L + (h / 6) * PW;         // ¹H ppm → x
+      const yH  = h   => B - (h / 6) * PH;          // ¹H ppm → y (COSY/NOESY y-axis)
+      const yC  = c   => B - (c / 200) * PH;        // ¹³C ppm → y (HSQC y-axis)
+      // Peak position
+      const px  = ([h,_])    => xH(h);
+      const py  = ([h,v])    => mode==="HSQC" ? yC(v) : yH(v);
+
+      // Axis tick values
+      const xTicks = [1,2,3,4,5];
+      const yTicksHH = [1,2,3,4,5];
+      const yTicksC  = [20,60,100,140,180];
+
+      return (
+        <div>
+          <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
+            {["COSY","NOESY","HSQC"].map(m=>(
+              <button key={m} onClick={()=>setMode(m)} style={{
+                padding:"8px 18px", borderRadius:20,
+                border:`1.5px solid ${mode===m ? colors[m] : C.border}`,
+                cursor:"pointer", fontSize:14, fontWeight:600,
+                background: mode===m ? colors[m]+"22" : "transparent",
+                color: mode===m ? colors[m] : C.textSec,
+                transition:"all .2s", minHeight:44,
+              }}>{m}</button>
+            ))}
+          </div>
+
+          <div className="glass" style={{borderRadius:14,padding:"16px"}}>
+            <p style={{fontSize:13,color:C.textSec,textAlign:"center",margin:"0 0 10px",fontWeight:600}}>{desc[mode]}</p>
+            <div style={{overflowX:"auto"}}>
+              <svg width={W} height={H} style={{display:"block",margin:"0 auto",overflow:"visible"}}>
+                <defs>
+                  <filter id="peakGlow" x="-60%" y="-60%" width="220%" height="220%">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                  </filter>
+                  <clipPath id="plotClip">
+                    <rect x={L} y={T} width={PW} height={PH}/>
+                  </clipPath>
+                </defs>
+
+                {/* Plot background */}
+                <rect x={L} y={T} width={PW} height={PH} fill="rgba(255,255,255,0.03)" stroke={C.border} strokeWidth={1} rx={3}/>
+
+                {/* Grid lines (subtle) */}
+                {xTicks.map(v=>(
+                  <line key={v} x1={xH(v)} y1={T} x2={xH(v)} y2={B} stroke={C.border} strokeWidth={0.4} opacity={0.5}/>
+                ))}
+                {(mode==="HSQC" ? yTicksC : yTicksHH).map(v=>(
+                  <line key={v} x1={L} y1={mode==="HSQC"?yC(v):yH(v)} x2={R} y2={mode==="HSQC"?yC(v):yH(v)} stroke={C.border} strokeWidth={0.4} opacity={0.5}/>
+                ))}
+
+                {/* COSY/NOESY diagonal */}
+                {mode!=="HSQC" && (
+                  <line x1={xH(0)} y1={yH(0)} x2={xH(6)} y2={yH(6)} stroke={C.border} strokeWidth={0.8} strokeDasharray="4,3" opacity={0.6}/>
+                )}
+
+                {/* Cross-peaks (drawn inside clip path so they stay in box) */}
+                <g clipPath="url(#plotClip)">
+                  {peaks[mode].map(([fx,fy],i)=>(
+                    <ellipse
+                      key={i}
+                      cx={px([fx,fy])} cy={py([fx,fy])}
+                      rx={11} ry={9}
+                      fill={colors[mode]}
+                      opacity={0.88}
+                      filter="url(#peakGlow)"
+                    />
+                  ))}
+                </g>
+
+                {/* X-axis ticks + labels (always ¹H) */}
+                {xTicks.map(v=>(
+                  <g key={v}>
+                    <line x1={xH(v)} y1={B} x2={xH(v)} y2={B+5} stroke={C.border}/>
+                    <text x={xH(v)} y={B+16} textAnchor="middle" fill={C.textSec} fontSize={10}>{v}</text>
+                  </g>
+                ))}
+                <text x={(L+R)/2} y={H-4} textAnchor="middle" fill={C.textSec} fontSize={11}>¹H δ (ppm)</text>
+
+                {/* Y-axis ticks + labels */}
+                {(mode==="HSQC" ? yTicksC : yTicksHH).map(v=>(
+                  <g key={v}>
+                    <line x1={L-5} y1={mode==="HSQC"?yC(v):yH(v)} x2={L} y2={mode==="HSQC"?yC(v):yH(v)} stroke={C.border}/>
+                    <text x={L-8} y={(mode==="HSQC"?yC(v):yH(v))+4} textAnchor="end" fill={C.textSec} fontSize={mode==="HSQC"?9:10}>{v}</text>
+                  </g>
+                ))}
+                <text x={14} y={(T+B)/2} textAnchor="middle" fill={C.textSec} fontSize={10} transform={`rotate(-90,14,${(T+B)/2})`}>
+                  {mode==="HSQC" ? "¹³C δ (ppm)" : "¹H δ (ppm)"}
+                </text>
+              </svg>
+            </div>
+          </div>
+
+          <div className="grid-3" style={{marginTop:14}}>
+            {[
+              {t:"COSY",  d:"H-H bonds (2–3 bonds)", c:C.blue},
+              {t:"NOESY", d:"H-H space (< 5 Å)",      c:C.orange},
+              {t:"HSQC",  d:"H-C one bond",            c:C.seafoam},
+            ].map(r=>(
+              <div key={r.t} className="glass" style={{borderRadius:11,padding:"12px 14px",borderTop:`2px solid ${r.c}40`}}>
+                <p style={{fontWeight:700,fontSize:13,color:r.c,margin:"0 0 4px"}}>{r.t}</p>
+                <p style={{fontSize:12,color:C.textSec,margin:0}}>{r.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ── MAS ANIMATION ─────────────────────────────────────────────────────────
+    function MASAnim() {
+      const t=useTick(50);
+      const rot=(t*3)%360;
+      return (
+        <div className="glass-light" style={{borderRadius:18,padding:"22px",textAlign:"center"}}>
+          <p style={{fontWeight:700,fontSize:15,color:C.text,margin:"0 0 14px",fontFamily:"'Cormorant Garamond',serif"}}>Magic Angle Spinning (MAS)</p>
+          <svg width={180} height={175} style={{display:"block",margin:"0 auto"}}>
+            <defs><marker id="axarr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="rgba(144,144,168,0.6)"/></marker></defs>
+            <line x1={90} y1={165} x2={90} y2={20} stroke="rgba(144,144,168,0.5)" strokeWidth={1.5} markerEnd="url(#axarr)"/>
+            <text x={96} y={18} fill={C.textSec} fontSize={10} fontStyle="italic" fontFamily="Cormorant Garamond,serif">B&#x2080;</text>
+            <line x1={90} y1={105} x2={90+70*Math.sin(54.74*Math.PI/180)} y2={105-70*Math.cos(54.74*Math.PI/180)} stroke={C.blue} strokeWidth={2.5}/>
+            <text x={138} y={70} fill={C.blue} fontSize={11} fontWeight={600}>54.74°</text>
+            <g transform={`translate(90,105) rotate(${rot})`}>
+              <ellipse rx={34} ry={11} fill="none" stroke={C.orange} strokeWidth={2} strokeDasharray="4,2"/>
+              {[0,60,120,180,240,300].map(d=>{const r2=d*Math.PI/180;return <circle key={d} cx={34*Math.cos(r2)} cy={11*Math.sin(r2)} r={4.5} fill={C.orange} opacity={.8}/>;})}</g>
+          </svg>
+          <p style={{fontSize:13,color:C.textSec,lineHeight:1.65,marginTop:4}}>Spinning at over 10,000 rpm around the magic angle (54.74°) averages dipolar couplings and CSA to zero.</p>
+        </div>
+      );
+    }
+
+    // ── INTERACTIVE SPECTRUM ──────────────────────────────────────────────────
+    const PEAKS=[
+      {x:11.5,label:"COOH",color:C.red,shift:"~11.5 ppm",desc:"Carboxylic acid proton. Strongly deshielded by the adjacent C=O group. High delta = downfield."},
+      {x:7.3,label:"ArH",color:C.blue,shift:"~7.3 ppm",desc:"Aromatic proton. Deshielded by the ring current effect: delocalised π-electrons reinforce B₀ at ring proton positions."},
+      {x:3.5,label:"OCH₃",color:C.orange,shift:"~3.5 ppm",desc:"Methoxy proton. Partially deshielded by the electronegative oxygen atom via inductive withdrawal."},
+      {x:1.2,label:"CH₃",color:C.seafoam,shift:"~1.2 ppm",desc:"Methyl proton. Well shielded by surrounding electron density. Low delta = upfield region."},
+      {x:0,label:"TMS",color:C.textTer,shift:"0 ppm",desc:"Tetramethylsilane (TMS). Universal reference compound; δ is defined as 0 ppm by convention (IUPAC)."},
+    ];
+    function IntSpectrum() {
+      const [hov,setHov]=useState(null);
+      const W=490,max=14,xOf=p=>28+((max-p)/max)*(W-44);
+      return (
+        <div>
+          <div className="overflow-x">
+            <svg width={W} height={190} style={{display:"block"}}>
+              <line x1={28} y1={152} x2={W-10} y2={152} stroke={C.border} strokeWidth={2}/>
+              {[0,2,4,6,8,10,12].map(v=>(<g key={v}><line x1={xOf(v)} y1={150} x2={xOf(v)} y2={157} stroke={C.border}/><text x={xOf(v)} y={172} fill={C.textSec} fontSize={11} textAnchor="middle">{v}</text></g>))}
+              <text x={W/2} y={188} fill={C.textSec} fontSize={12} textAnchor="middle">δ (ppm) — downfield left, upfield right</text>
+              {PEAKS.map(pk=>{
+                const cx=xOf(pk.x),isH=hov===pk.label;
+                const h=pk.x===0?24:pk.x<2?50:pk.x<5?80:pk.x<8?106:126;
+                return (<g key={pk.label} onMouseEnter={()=>setHov(pk.label)} onMouseLeave={()=>setHov(null)} style={{cursor:"pointer"}}>
+                  <ellipse cx={cx} cy={152-h/2} rx={isH?13:8} ry={h/2} fill={pk.color} opacity={isH?.82:.38} style={{transition:"all .2s"}}/>
+                  <line x1={cx} y1={152-h} x2={cx} y2={152} stroke={pk.color} strokeWidth={isH?3:1.5} style={{filter:isH?`drop-shadow(0 0 8px ${pk.color})`:"none",transition:"all .2s"}}/>
+                  <text x={cx} y={152-h-8} fill={pk.color} fontSize={11} textAnchor="middle" fontWeight={isH?700:400}>{pk.label}</text>
+                </g>);
+              })}
+            </svg>
+          </div>
+          <div style={{minHeight:88,marginTop:8}}>
+            {hov?(
+              <div className="fade-up glass-light" style={{borderRadius:12,padding:"14px 18px",border:`1px solid ${PEAKS.find(p=>p.label===hov)?.color}40`}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6,flexWrap:"wrap",gap:4}}>
+                  <strong style={{color:PEAKS.find(p=>p.label===hov)?.color,fontSize:16}}>{hov}</strong>
+                  <span style={{color:C.blue,fontSize:13,fontWeight:600}}>{PEAKS.find(p=>p.label===hov)?.shift}</span>
+                </div>
+                <p style={{color:C.textSec,fontSize:14,margin:0,lineHeight:1.65}}>{PEAKS.find(p=>p.label===hov)?.desc}</p>
+              </div>
+            ):<p style={{color:C.textTer,fontSize:14,textAlign:"center",paddingTop:26}}>Hover over a peak for explanation</p>}
+          </div>
+        </div>
+      );
+    }
+
+    // ── J-SPLITTING VIZ ───────────────────────────────────────────────────────
+    function JSplitViz() {
+      const [sel,setSel]=useState("doublet");
+      const pats={
+        singlet:{label:"Singlet (0 neighbours)",peaks:[{x:50,h:80}],ratio:"1",rule:"n+1 = 1 line"},
+        doublet:{label:"Doublet (1 neighbour)",peaks:[{x:32,h:60},{x:68,h:60}],ratio:"1:1",rule:"n+1 = 2 lines"},
+        triplet:{label:"Triplet (2 neighbours)",peaks:[{x:20,h:40},{x:50,h:80},{x:80,h:40}],ratio:"1:2:1",rule:"n+1 = 3 lines"},
+        quartet:{label:"Quartet (3 neighbours)",peaks:[{x:14,h:30},{x:38,h:60},{x:62,h:60},{x:86,h:30}],ratio:"1:3:3:1",rule:"n+1 = 4 lines"},
+      };
+      const pat=pats[sel];
+      return (
+        <div>
+          <div style={{display:"flex",gap:7,marginBottom:14,flexWrap:"wrap"}}>
+            {Object.entries(pats).map(([k,v])=>(<button key={k} onClick={()=>setSel(k)} style={{padding:"7px 13px",borderRadius:18,border:`1.5px solid ${sel===k?C.blue:C.border}`,cursor:"pointer",fontSize:12,fontWeight:600,background:sel===k?C.blue+"22":"transparent",color:sel===k?C.blue:C.textSec,transition:"all .2s",minHeight:40}}>{v.label}</button>))}
+          </div>
+          <div className="glass" style={{borderRadius:13,padding:"18px"}}>
+            <svg width={270} height={100} style={{display:"block",margin:"0 auto"}}>
+              <line x1={10} y1={92} x2={260} y2={92} stroke={C.border} strokeWidth={1.5}/>
+              {pat.peaks.map((pk,i)=>(<g key={i}><ellipse cx={pk.x*2.5+8} cy={92-pk.h/2} rx={10} ry={pk.h/2} fill={C.blue} opacity={.65}/><line x1={pk.x*2.5+8} y1={92-pk.h} x2={pk.x*2.5+8} y2={92} stroke={C.blue} strokeWidth={2}/></g>))}
+            </svg>
+            <div style={{textAlign:"center",marginTop:8}}>
+              <p style={{fontWeight:700,fontSize:22,color:C.blue,margin:"0 0 4px",fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic"}}>{pat.ratio}</p>
+              <p style={{fontSize:13,color:C.textSec,margin:0}}>{pat.rule}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ── PROCESS SECTION ───────────────────────────────────────────────────────
+    const STEPS=[
+      {icon:"🔀",title:"Free spins: no external field",color:C.textSec,short:"Random",body:"Without an external magnetic field, all nuclear spins are randomly oriented. There is no net magnetisation and therefore no measurable NMR signal.",visual:React.createElement(SpinGrid,{mode:"random"})},
+      {icon:"🧲",title:"Applying B₀: spin alignment",color:C.blue,short:"Alignment",body:"A superconducting magnet applies B₀ (1–21 T). Spins align either parallel (α, m = +½, lower energy) or antiparallel (β, m = −½, higher energy). A small net magnetisation M₀ builds up according to the Boltzmann distribution.",visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement(SpinGrid,{mode:"aligned"}),React.createElement(EnergyDiag,null))},
+      {icon:"📡",title:"RF pulse: excitation at the Larmor frequency",color:C.orange,short:"RF Pulse",body:"A short radiofrequency pulse at exactly the Larmor frequency ν₀ = γB₀/2π tips the net magnetisation by 90° into the transverse plane. The spins become phase-coherent and precess around B₀.",visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement(SpinGrid,{mode:"tipped"}),React.createElement(RFWave,null))},
+      {icon:"〰️",title:"FID signal: relaxation and detection",color:C.seafoam,short:"Detection",body:"After the pulse, spins return to equilibrium via T₁ (longitudinal, spin-lattice) and T₂ (transverse, spin-spin) relaxation. The precessing magnetisation induces an exponentially decaying oscillating signal in the detection coil: the Free Induction Decay (FID).",visual:React.createElement("div",{style:{display:"flex",gap:18,alignItems:"center",flexWrap:"wrap",justifyContent:"center"}},React.createElement("div",{style:{textAlign:"center"}},React.createElement(Nucleus,{spinUp:true,color:C.seafoam,speed:2.5,sc:.88}),React.createElement("p",{style:{color:C.textSec,fontSize:12,marginTop:4}},"Precessing nucleus")),React.createElement(FIDWave,null))},
+      {icon:"📊",title:"Fourier transform: obtaining the spectrum",color:C.purple,short:"FT",body:"The Fourier transform (FT) converts the FID from the time domain into the frequency domain, yielding the NMR spectrum. Each peak appears at a characteristic chemical shift δ in ppm.",visual:React.createElement(FourierViz,null)},
+    ];
+    function ProcessSec() {
+      const [act,setAct]=useState(0);
+      const step=STEPS[act];
+      return (
+        <div>
+          {/* Step indicator — button + label in same column, connector between columns */}
+          <div style={{display:"flex",alignItems:"flex-start",overflowX:"auto",paddingBottom:8,marginBottom:16}}>
+            {STEPS.map((s,i)=>(
+              <React.Fragment key={i}>
+                {/* Column: icon button + short label */}
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,width:68}}>
+                  <button
+                    onClick={()=>setAct(i)}
+                    style={{
+                      width:48,height:48,borderRadius:"50%",
+                      border:`2px solid ${i===act?s.color:C.border}`,
+                      background:i===act?s.color+"20":"transparent",
+                      cursor:"pointer",fontSize:17,
+                      boxShadow:i===act?`0 0 20px ${s.color}44`:"none",
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      transition:"all .25s",flexShrink:0,
+                    }}
+                  >{s.icon}</button>
+                  <p style={{
+                    fontSize:10,textAlign:"center",margin:"6px 0 0",lineHeight:1.3,
+                    fontWeight:i===act?700:400,
+                    color:i===act?s.color:C.textTer,
+                    transition:"color .2s",width:"100%",
+                  }}>{s.short}</p>
+                </div>
+                {/* Horizontal connector — centred on the 48px button height (24px from top) */}
+                {i<STEPS.length-1&&(
+                  <div style={{
+                    flexShrink:0,height:2,width:20,marginTop:23,
+                    background:i<act?C.blue+"66":C.border,
+                    transition:"background .4s",
+                  }}/>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div key={act} className="fade-up glass" style={{borderRadius:15,padding:"22px 16px",border:`1px solid ${step.color}30`,marginBottom:13,minHeight:155,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            {step.visual}
+          </div>
+          <div className="glass-light" style={{borderRadius:12,padding:"17px 19px",marginBottom:13}}>
+            <p style={{fontWeight:700,fontSize:16,color:step.color,marginBottom:8}}>{step.icon} {step.title}</p>
+            <p style={{color:C.textSec,lineHeight:1.78,fontSize:14,margin:0}}>{step.body}</p>
+          </div>
+          <div style={{display:"flex",gap:10}}>
+            <button onClick={()=>setAct(v=>Math.max(0,v-1))} disabled={act===0} style={{flex:1,padding:"11px",borderRadius:10,border:`1px solid ${C.border}`,background:"transparent",color:act===0?C.textTer:C.textSec,cursor:act===0?"default":"pointer",fontSize:13,minHeight:44}}>← Previous</button>
+            <button onClick={()=>setAct(v=>Math.min(STEPS.length-1,v+1))} disabled={act===STEPS.length-1} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:act===STEPS.length-1?"rgba(255,255,255,0.05)":step.color,color:act===STEPS.length-1?C.textTer:"white",cursor:act===STEPS.length-1?"default":"pointer",fontWeight:600,fontSize:13,transition:"background .3s",minHeight:44}}>Next step →</button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── GAMMA TABLE ───────────────────────────────────────────────────────────
+    function GTable() {
+      const rows=[
+        {n:"¹H",g:"26.752",f:"600.1",a:"99.985%",ok:true,hi:true},
+        {n:"¹⁹F",g:"25.181",f:"564.7",a:"100.0%",ok:true,hi:false},
+        {n:"³¹P",g:"10.841",f:"242.9",a:"100.0%",ok:true,hi:false},
+        {n:"¹³C",g:"6.728",f:"150.9",a:"1.108%",ok:true,hi:false},
+        {n:"¹⁵N",g:"−2.712",f:"60.8",a:"0.368%",ok:true,hi:false},
+        {n:"¹²C",g:"n/a (I=0)",f:"—",a:"98.892%",ok:false,hi:false},
+        {n:"¹⁶O",g:"n/a (I=0)",f:"—",a:"99.757%",ok:false,hi:false},
+      ];
+      return (
+        <div className="overflow-x">
+          <table style={{borderCollapse:"collapse",width:"100%",fontSize:14}}>
+            <thead><tr style={{borderBottom:`2px solid ${C.border}`}}>
+              {["Nucleus","γ (×10⁷ rad T⁻¹ s⁻¹)","Freq. at 14.1 T","Natural abund.","NMR-active"].map(h=><th key={h} style={{padding:"10px 13px",textAlign:"left",color:C.textSec,fontWeight:600,fontSize:12}}>{h}</th>)}
+            </tr></thead>
+            <tbody>{rows.map(r=>(
+              <tr key={r.n} style={{borderBottom:`1px solid ${C.border}`,background:r.hi?"rgba(77,163,255,0.08)":"transparent"}}>
+                <td style={{padding:"11px 13px",fontWeight:700,fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic",color:r.hi?C.blue:C.text}}>{r.n}</td>
+                <td style={{padding:"11px 13px",color:r.ok?C.text:C.textTer}}>{r.g}</td>
+                <td style={{padding:"11px 13px",color:r.ok?C.text:C.textTer}}>{r.f}{r.ok?" MHz":""}</td>
+                <td style={{padding:"11px 13px",color:C.textSec}}>{r.a}</td>
+                <td style={{padding:"11px 13px"}}>{r.ok?<span style={{color:C.seafoam,fontWeight:700}}>Yes (I = ½)</span>:<span style={{color:C.textTer}}>No (I = 0)</span>}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+          <p style={{fontSize:12,color:C.textTer,marginTop:8}}>Frequencies at B₀ = 14.1 T. γ values from IUPAC 2021 recommendations.</p>
+        </div>
+      );
+    }
+
+    // ── FINAL QUIZ ────────────────────────────────────────────────────────────
+    function QuizSection() {
+      const [cur,setCur]=useState(0);
+      const [sel,setSel]=useState(null);
+      const [answers,setAnswers]=useState([]);
+      const [done,setDone]=useState(false);
+      const q=QUIZ_FINAL[cur];
+      const pick=i=>{if(sel!==null)return;setSel(i);setAnswers(a=>[...a,i===q.ans]);};
+      const next=()=>{if(cur<QUIZ_FINAL.length-1){setCur(c=>c+1);setSel(null);}else setDone(true);};
+      if(done){
+        const correct=answers.filter(Boolean).length,pct=Math.round(correct/QUIZ_FINAL.length*100);
+        return (
+          <div style={{textAlign:"center",padding:"10px 0"}}>
+            <div style={{fontSize:64,marginBottom:14}}>{pct>=85?"🏆":pct>=70?"🎯":pct>=55?"📚":"💪"}</div>
+            <h2 style={{fontSize:36,fontWeight:700,color:C.text,margin:"0 0 8px",fontFamily:"'Cormorant Garamond',serif"}}>{pct>=85?"Excellent!":pct>=70?"Well done!":pct>=55?"Good effort!":"Keep practising!"}</h2>
+            <div style={{fontSize:52,fontWeight:700,color:C.gold,margin:"10px 0 8px",fontFamily:"'Cormorant Garamond',serif"}}>{pct}%</div>
+            <p style={{color:C.textSec,marginBottom:24}}>{correct} of {QUIZ_FINAL.length} correct</p>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:28,flexWrap:"wrap"}}>
+              {answers.map((ok,i)=>(<div key={i} style={{width:40,height:40,borderRadius:"50%",background:ok?C.greenSoft:C.redSoft,border:`2px solid ${ok?C.green:C.red}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>{ok?"✓":"✗"}</div>))}
+            </div>
+            <button onClick={()=>{setCur(0);setSel(null);setAnswers([]);setDone(false);}} style={{background:C.gold,color:"#06060e",border:"none",borderRadius:12,padding:"14px 36px",fontSize:15,cursor:"pointer",fontWeight:700,minHeight:50}}>Try again</button>
+          </div>
+        );
+      }
+      return (
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+            <span style={{color:C.textSec,fontSize:14}}>Question {cur+1} of {QUIZ_FINAL.length}</span>
+            <span style={{color:C.gold,fontSize:14,fontWeight:700}}>Score: {answers.filter(Boolean).length}</span>
+          </div>
+          <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,marginBottom:20}}>
+            <div style={{height:"100%",background:`linear-gradient(90deg,${C.gold},${C.blue})`,borderRadius:2,width:`${(cur/QUIZ_FINAL.length)*100}%`,transition:"width .4s ease"}}/>
+          </div>
+          <div className="glass" style={{borderRadius:14,padding:"20px 18px",marginBottom:14}}>
+            <h3 style={{fontSize:16,fontWeight:600,color:C.text,lineHeight:1.55,margin:0}}>{q.q}</h3>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:14}}>
+            {q.opts.map((opt,i)=>{
+              let bg="rgba(255,255,255,0.04)",border=C.border,color=C.text;
+              if(sel!==null){if(i===q.ans){bg="rgba(0,191,168,0.1)";border=C.green;color=C.green;}else if(i===sel){bg="rgba(255,124,110,0.1)";border=C.red;color=C.red;}}
+              return (<button key={i} onClick={()=>pick(i)} style={{background:bg,border:`1.5px solid ${border}`,borderRadius:11,padding:"12px 16px",textAlign:"left",cursor:sel!==null?"default":"pointer",color,fontSize:14,fontWeight:i===q.ans&&sel!==null?700:400,transition:"all .25s",minHeight:48}}>
+                <span style={{color:C.textTer,marginRight:10}}>{["A","B","C","D"][i]}.</span>{opt}
+              </button>);
+            })}
+          </div>
+          {sel!==null&&(<div className="fade-up glass-light" style={{borderRadius:12,padding:"14px 18px",marginBottom:14}}>
+            <p style={{fontWeight:700,color:sel===q.ans?C.green:C.red,marginBottom:6}}>{sel===q.ans?"Correct! ✓":"Incorrect. The correct answer is highlighted."}</p>
+            <p style={{color:C.textSec,fontSize:13.5,lineHeight:1.72,margin:0}}>{q.exp}</p>
+          </div>)}
+          {sel!==null&&(<button onClick={next} style={{width:"100%",background:C.gold,color:"#06060e",border:"none",borderRadius:11,padding:"13px",fontSize:15,cursor:"pointer",fontWeight:700,minHeight:50}}>{cur<QUIZ_FINAL.length-1?"Next question →":"View results →"}</button>)}
+        </div>
+      );
+    }
+
+    // ── REFERENCES ────────────────────────────────────────────────────────────
+    function References() {
+      const refs=[
+        {cat:"Lecture material",items:[{text:"Van der Wel, P.C.A. (2024–2025). Surface Characterization (BME BSc): NMR Spectroscopy — Part 1 and Part 2. University of Groningen.",url:null}]},
+        {cat:"Journal articles",items:[
+          {text:"Kwan, A.H. et al. (2011). Macromolecular NMR spectroscopy for the non-spectroscopist. FEBS Journal, 278(5), 687–703.",url:"https://doi.org/10.1111/j.1742-4658.2011.08004.x"},
+          {text:"Karplus, M. (1959). Contact electron-spin coupling of nuclear magnetic moments. Journal of Chemical Physics, 30, 11–15.",url:"https://doi.org/10.1063/1.1729860"},
+        ]},
+        {cat:"Textbooks",items:[
+          {text:"Keeler, J. (2010). Understanding NMR Spectroscopy, 2nd ed. Wiley.",url:null},
+          {text:"Claridge, T.D.W. (2016). High-Resolution NMR Techniques in Organic Chemistry, 3rd ed. Elsevier.",url:null},
+        ]},
+        {cat:"Physical constants (IUPAC/CODATA 2018)",items:[
+          {text:"Proton gyromagnetic ratio γ(¹H) = 26.7522187 × 10⁷ rad T⁻¹ s⁻¹.",url:"https://physics.nist.gov/cgi-bin/cuu/Value?gammap"},
+          {text:"Planck constant ℏ = 1.054571817 × 10⁻³⁴ J s. Boltzmann constant k = 1.380649 × 10⁻²³ J K⁻¹.",url:"https://physics.nist.gov/cuu/Constants"},
+        ]},
+        {cat:"Video resources",items:[
+          {text:"NMR Spectroscopy Visualized (2020). Educational overview.",url:"https://www.youtube.com/watch?v=RZLew6Ff-JE"},
+          {text:"NMR Spectroscopy for Visual Learners (2023).",url:"https://www.youtube.com/watch?v=fG-ZexdlziU"},
+          {text:"MRI Scan Animation (2020).",url:"https://www.youtube.com/watch?v=OZjpaDMSXVM"},
+        ]},
+      ];
+      return (
+        <Section id="sec-refs" bg={C.bgAlt}>
+          <Reveal><Label>References</Label><H>Sources &amp; Further Reading</H></Reveal>
+          <Reveal delay={.05}>
+            <div className="glass-light" style={{borderRadius:16,padding:"22px 24px",marginBottom:32,borderLeft:`3px solid ${C.gold}`}}>
+              <p style={{fontWeight:700,fontSize:15,color:C.gold,margin:"0 0 16px",fontFamily:"'Cormorant Garamond',serif"}}>E-learning authors</p>
+              <div style={{display:"flex",gap:28,flexWrap:"wrap"}}>
+                {[{name:"Sem Andriessen",num:"S5842212"},{name:"Niels van der Heide",num:"S5989515"},{name:"Tim Krol",num:"S5973058"},{name:"Gosse Zandstra",num:"S5465508"}].map(s=>(
+                  <div key={s.num} style={{minWidth:140}}>
+                    <p style={{fontWeight:600,fontSize:15,color:C.text,margin:"0 0 2px"}}>{s.name}</p>
+                    <p style={{fontSize:13,color:C.textSec,margin:0}}>{s.num}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+          {refs.map(cat=>(
+            <Reveal key={cat.cat} delay={.1}>
+              <div style={{marginBottom:28}}>
+                <p style={{fontWeight:700,fontSize:15,color:C.text,margin:"0 0 12px",paddingBottom:8,borderBottom:`1px solid ${C.border}`}}>{cat.cat}</p>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {cat.items.map((item,i)=>(
+                    <div key={i} className="glass" style={{borderRadius:12,padding:"14px 18px",display:"flex",gap:12,alignItems:"flex-start"}}>
+                      <span style={{color:C.gold,fontWeight:700,fontSize:15,flexShrink:0,marginTop:2}}>·</span>
+                      <div>
+                        <p style={{fontSize:14,lineHeight:1.68,color:C.textSec,margin:0}}>{item.text}</p>
+                        {item.url&&<a href={item.url} target="_blank" rel="noopener noreferrer" style={{fontSize:12,color:C.blue,textDecoration:"none",display:"inline-block",marginTop:4}}>{item.url} ↗</a>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </Section>
+      );
+    }
+
+    // ── HERO ──────────────────────────────────────────────────────────────────
+    function Hero() {
+      const [rdy, setRdy] = useState(false);
+      useEffect(()=>{const t=setTimeout(()=>setRdy(true),150);return()=>clearTimeout(t);},[]);
+      return (
+        <div id="hero" style={{minHeight:"100vh",background:"#06060e",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"80px 6%",position:"relative",overflow:"hidden",zIndex:1}}>
+          {/* Radial glow */}
+          <div style={{position:"absolute",inset:0,background:"radial-gradient(ellipse at 50% 60%, rgba(77,163,255,0.12) 0%, rgba(201,169,110,0.05) 40%, transparent 70%)",pointerEvents:"none"}}/>
+          {/* Animated ring */}
+          <div style={{position:"absolute",top:"50%",left:"50%",width:700,height:700,borderRadius:"50%",border:"1px solid rgba(201,169,110,0.06)",transform:"translate(-50%,-50%)",animation:"rotateRing 60s linear infinite",pointerEvents:"none"}}/>
+          <div style={{position:"absolute",top:"50%",left:"50%",width:500,height:500,borderRadius:"50%",border:"1px solid rgba(77,163,255,0.07)",transform:"translate(-50%,-50%)",animation:"rotateRing 40s linear infinite reverse",pointerEvents:"none"}}/>
+          <FloatingAtoms/>
+          <div style={{opacity:rdy?1:0,transform:rdy?"none":"translateY(32px)",transition:`all 1.4s ${SPRING}`,zIndex:1,maxWidth:880}}>
+            <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(201,169,110,0.7)",marginBottom:22}}>Surface Characterization · BME BSc · University of Groningen</p>
+            <h1 className="hero-h1" style={{fontSize:"clamp(40px,6.5vw,84px)",fontWeight:700,lineHeight:1.04,letterSpacing:"-0.024em",color:"#f0f0f8",margin:"0 0 18px",fontFamily:"'Cormorant Garamond',Georgia,serif"}}>
+              Nuclear<br/>
+              <span className="gold-gradient">Magnetic Resonance</span>
+            </h1>
+            <p style={{fontSize:"clamp(15px,2.4vw,19px)",lineHeight:1.7,color:"rgba(144,144,168,0.9)",maxWidth:520,margin:"0 auto 36px"}}>From nuclear spins to MRI scans and protein structures. A comprehensive interactive e-learning module.</p>
+            <div className="module-tags" style={{display:"flex",gap:10,justifyContent:"center",marginBottom:36,flexWrap:"wrap"}}>
+              {["11 modules","3 videos","12 quiz questions","approx. 30 min"].map(tag=>(
+                <span key={tag} style={{padding:"7px 16px",borderRadius:20,border:"1px solid rgba(201,169,110,0.2)",color:"rgba(201,169,110,0.7)",fontSize:13,background:"rgba(201,169,110,0.05)"}}>{tag}</span>
+              ))}
+            </div>
+            <div style={{marginBottom:44,padding:"20px 28px",background:"rgba(255,255,255,0.03)",borderRadius:18,border:"1px solid rgba(201,169,110,0.15)",display:"inline-block",backdropFilter:"blur(12px)"}}>
+              <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(201,169,110,0.5)",margin:"0 0 14px"}}>Authors</p>
+              <div style={{display:"flex",gap:28,flexWrap:"wrap",justifyContent:"center"}}>
+                {[{name:"Sem Andriessen",num:"S5842212"},{name:"Niels van der Heide",num:"S5989515"},{name:"Tim Krol",num:"S5973058"},{name:"Gosse Zandstra",num:"S5465508"}].map(s=>(
+                  <div key={s.num} style={{textAlign:"center"}}>
+                    <p style={{color:"#f0f0f8",fontSize:14,fontWeight:600,margin:"0 0 3px"}}>{s.name}</p>
+                    <p style={{color:"rgba(90,90,122,0.8)",fontSize:12,margin:0}}>{s.num}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <br/>
+            <button onClick={()=>document.getElementById("sec-intro")?.scrollIntoView({behavior:"smooth"})}
+              style={{background:`linear-gradient(135deg, ${C.gold}, #e8c882)`,color:"#06060e",border:"none",borderRadius:14,padding:"17px 44px",fontSize:16,cursor:"pointer",fontWeight:700,boxShadow:`0 8px 40px rgba(201,169,110,0.4)`,transition:"transform .2s, box-shadow .2s",minHeight:54,letterSpacing:"0.02em",fontFamily:"'DM Sans',sans-serif"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.04)";e.currentTarget.style.boxShadow=`0 14px 52px rgba(201,169,110,0.55)`;}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow=`0 8px 40px rgba(201,169,110,0.4)`;}}
+            >
+              Begin the e-learning →
+            </button>
+          </div>
+          {/* Scroll indicator */}
+          <div style={{position:"absolute",bottom:32,left:"50%",transform:"translateX(-50%)",opacity:rdy?0.5:0,transition:"opacity 2s 1.5s",display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+            <span style={{fontSize:11,letterSpacing:"0.1em",textTransform:"uppercase",color:C.textTer}}>Scroll</span>
+            <div style={{width:1,height:32,background:`linear-gradient(to bottom, ${C.gold}, transparent)`,animation:"pulse 2s ease-in-out infinite"}}/>
+          </div>
+        </div>
+      );
+    }
+
+    // ── APP ───────────────────────────────────────────────────────────────────
+    function App() {
+      return (
+        <div style={{position:"relative",zIndex:1}}>
+          <NMRBackground/>
+          <ProgressBar/>
+          <SideNav/>
+          <Hero/>
+
+          {/* MODULE 1 */}
+          <Section id="sec-intro" bg={C.bg}>
+            <Reveal><Label>Module 1: Introduction</Label><H>What is NMR Spectroscopy?</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Nuclear Magnetic Resonance (NMR) is an analytical spectroscopic technique that exploits the magnetic properties of certain atomic nuclei to determine the chemical structure and dynamics of molecules. It operates on the same physical principles as magnetic resonance imaging (MRI) in clinical medicine.</P>
+                <P>NMR uniquely provides information about which functional groups are present (chemical shift), how many protons each contains (integral), how groups are connected (J-coupling), and molecular dynamics (relaxation times T₁ and T₂).</P>
+                <div style={{display:"flex",flexWrap:"wrap",marginTop:4}}>
+                  <Chip color={C.blue}>Chemical analysis</Chip><Chip color={C.orange}>Protein structure</Chip>
+                  <Chip color={C.seafoam}>MRI</Chip><Chip color={C.purple}>Materials science</Chip>
+                  <Chip color={C.green}>Drug discovery</Chip>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div className="glass-light" style={{borderRadius:22,padding:24}}>
+                  <p style={{fontSize:11,fontWeight:700,color:C.textSec,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.06em"}}>Prof. Patrick van der Wel · University of Groningen</p>
+                  {/* Inline SVG: NMR spectrometer schematic */}
+                  <div style={{borderRadius:14,overflow:"hidden",marginBottom:12,background:"rgba(6,6,14,0.8)",padding:"10px 0"}}>
+                    <svg viewBox="0 0 200 220" style={{display:"block",margin:"0 auto",width:"100%",maxWidth:220}}>
+                      <defs>
+                        <linearGradient id="cryoGrad" x1="0" x2="1" y1="0" y2="0">
+                          <stop offset="0%" stopColor="#1a2540"/>
+                          <stop offset="40%" stopColor="#243060"/>
+                          <stop offset="100%" stopColor="#1a2540"/>
+                        </linearGradient>
+                        <linearGradient id="boreGrad" x1="0" x2="1" y1="0" y2="0">
+                          <stop offset="0%" stopColor="#06060e"/>
+                          <stop offset="50%" stopColor="#0d1220"/>
+                          <stop offset="100%" stopColor="#06060e"/>
+                        </linearGradient>
+                        <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                      </defs>
+                      {/* Outer cryostat body */}
+                      <rect x={60} y={15} width={80} height={190} rx={40} fill="url(#cryoGrad)" stroke="#4AA8FF" strokeWidth="1.2" opacity="0.9"/>
+                      {/* Cryostat rings */}
+                      {[40,70,100,130,160].map(y=>(
+                        <line key={y} x1={62} y1={y} x2={138} y2={y} stroke="#4AA8FF" strokeWidth="0.4" opacity="0.3"/>
+                      ))}
+                      {/* Inner bore (sample tube) */}
+                      <rect x={85} y={15} width={30} height={190} rx={15} fill="url(#boreGrad)" stroke="#2EC4E0" strokeWidth="1"/>
+                      {/* Magnetic field lines in bore */}
+                      {[-8,-4,0,4,8].map(dx=>(
+                        <line key={dx} x1={100+dx} y1={22} x2={100+dx} y2={198} stroke="#2EC4E0" strokeWidth="0.5" opacity="0.25"/>
+                      ))}
+                      {/* Sample tube */}
+                      <rect x={97} y={55} width={6} height={110} rx={3} fill="#C9A96E" opacity="0.7"/>
+                      {/* Top cap */}
+                      <ellipse cx={100} cy={15} rx={40} ry={8} fill="#243060" stroke="#4AA8FF" strokeWidth="1"/>
+                      {/* Bottom cap */}
+                      <ellipse cx={100} cy={205} rx={40} ry={8} fill="#243060" stroke="#4AA8FF" strokeWidth="1"/>
+                      {/* Coil winding indicator */}
+                      {[60,75,90,105,120,135,150].map((y,i)=>(
+                        <path key={y} d={`M 62 ${y} Q 100 ${y+6} 138 ${y}`} fill="none" stroke="#7A9FFF" strokeWidth="0.8" opacity="0.4"/>
+                      ))}
+                      {/* Glow at bore */}
+                      <ellipse cx={100} cy={110} rx={14} ry={60} fill="#4AA8FF" opacity="0.04" filter="url(#glow2)"/>
+                      {/* Labels */}
+                      <text x={147} y={50} fill="#7A9FFF" fontSize={8} opacity={0.8}>Cryostat</text>
+                      <line x1={138} y1={47} x2={144} y2={47} stroke="#7A9FFF" strokeWidth={0.6} opacity={0.6}/>
+                      <text x={147} y={112} fill="#2EC4E0" fontSize={8} opacity={0.8}>Bore</text>
+                      <line x1={115} y1={110} x2={144} y2={110} stroke="#2EC4E0" strokeWidth={0.6} opacity={0.6}/>
+                      <text x={147} y={140} fill="#C9A96E" fontSize={8} opacity={0.8}>Sample</text>
+                      <line x1={103} y1={110} x2={144} y2={137} stroke="#C9A96E" strokeWidth={0.6} opacity={0.6}/>
+                      {/* Bottom label */}
+                      <text x={100} y={218} textAnchor="middle" fill="#4AA8FF" fontSize={9} fontWeight="600" opacity={0.7}>600 MHz · 14.1 T</text>
+                    </svg>
+                  </div>
+                  <p style={{fontSize:13,color:C.textSec,lineHeight:1.65,textAlign:"center"}}>Superconducting magnet, liquid helium cooling, Bruker Ascend platform</p>
+                  <Callout color={C.blue}><strong>Recommended reading:</strong> Kwan et al., FEBS J. 2011 — "Macromolecular NMR spectroscopy for the non-spectroscopist."</Callout>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={.2}><VideoEmbed id="RZLew6Ff-JE" title="NMR Spectroscopy Visualized" caption="NMR Spectroscopy Visualized: visual overview of how NMR works (approx. 10 min)"/></Reveal>
+          </Section>
+
+          {/* MODULE 2 */}
+          <Section id="sec-spin" bg={C.bgAlt}>
+            <Reveal><Label>Module 2: Nuclear Spin</Label><H>Nuclei as Miniature Magnets</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Certain atomic nuclei possess a quantum mechanical property called <strong>spin</strong>, characterised by spin quantum number I. Nuclei with I ≠ 0 have a <strong>magnetic moment</strong> and are NMR-active.</P>
+                <Fml>μ = γ · I</Fml>
+                <P size={14}>The magnetic moment <strong>μ</strong> is proportional to angular momentum <strong>I</strong> through the <strong>gyromagnetic ratio γ</strong>, a nucleus-specific constant. A larger γ gives stronger NMR signals and higher sensitivity.</P>
+                <P size={14}>For spin-½ nuclei there are 2I + 1 = 2 quantum states: the α state (m = +½, parallel to B₀, lower energy) and the β state (m = −½, antiparallel, higher energy).</P>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div style={{display:"flex",gap:24,justifyContent:"center",flexWrap:"wrap"}}>
+                  <div style={{textAlign:"center"}}>
+                    <Nucleus spinUp={true} color={C.blue}/>
+                    <p style={{fontSize:12,color:C.textSec,marginTop:6}}>α-state (lower energy)</p>
+                  </div>
+                  <div style={{textAlign:"center"}}>
+                    <Nucleus spinUp={false} color={C.orange}/>
+                    <p style={{fontSize:12,color:C.textSec,marginTop:6}}>β-state (higher energy)</p>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{marginTop:38}}><p style={{fontWeight:600,fontSize:16,color:C.text,marginBottom:16,fontFamily:"'Cormorant Garamond',serif"}}>Gyromagnetic ratios of NMR-relevant nuclei (IUPAC 2021):</p><GTable/></div></Reveal>
+          </Section>
+
+          {/* MODULE 3 */}
+          <Section id="sec-energy" bg={C.bgDark}>
+            <Reveal><Label>Module 3: Energy Levels and the Larmor Frequency</Label><H>Zeeman Splitting and Resonance</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>In an external magnetic field B₀, each spin state acquires a distinct energy (Zeeman effect):</P>
+                <div className="glass" style={{borderRadius:12,padding:"13px 20px",margin:"10px 0 18px"}}>
+                  <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic",fontSize:18,color:"#c0d8ff",margin:"0 0 7px"}}>E = −γ m ℏ B₀</p>
+                  <p style={{fontSize:13,color:C.textSec,margin:0}}>m = +½ (α): lower energy. m = −½ (β): higher energy (for γ {">"} 0).</p>
+                </div>
+                <P>The energy difference and the Larmor frequency:</P>
+                <div className="glass" style={{borderRadius:12,padding:"13px 20px",margin:"10px 0 18px",border:`1px solid ${C.seafoam}30`}}>
+                  <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic",fontSize:19,color:C.seafoam,margin:"0 0 6px"}}>ΔE = γ ℏ B₀</p>
+                  <p style={{fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic",fontSize:19,color:C.blue,margin:0}}>ν₀ = γ B₀ / 2π</p>
+                </div>
+                <P size={14}>The Boltzmann distribution determines the α/β spin population ratio. At 14.1 T and 300 K the excess of α spins is only ~96 ppm per spin, making NMR inherently insensitive. Higher B₀ increases this excess and therefore improves sensitivity approximately as B₀^(7/4).</P>
+              </Reveal>
+              <Reveal delay={.25}><EnergyDiag/></Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{marginTop:44}}><BoltzCalc/></div></Reveal>
+
+            {/* CHECKPOINT after Module 3 */}
+            <Reveal delay={.3}>
+              <CheckpointQuiz questions={CHECKPOINT_M3} moduleLabel="Energy Levels"/>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 4 */}
+          <Section id="sec-process" bg={C.bg}>
+            <Reveal><Label>Module 4: The NMR Experiment</Label><H>From Spins to Spectrum</H><P size={17}>An NMR experiment proceeds through five sequential steps. Click each step to view the animation and explanation.</P></Reveal>
+            <Reveal delay={.1}><ProcessSec/></Reveal>
+            <Reveal delay={.15}><VideoEmbed id="fG-ZexdlziU" title="NMR Spectroscopy for Visual Learners" caption="NMR Spectroscopy for Visual Learners: chemical shift, coupling, and spectrum interpretation (approx. 12 min)"/></Reveal>
+          </Section>
+
+          {/* MODULE 5 */}
+          <Section id="sec-shift" bg={C.bgAlt}>
+            <Reveal><Label>Module 5: Chemical Shift</Label><H>Electrons as a Magnetic Shield</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>B₀ induces a circulation of electrons around each nucleus, generating a small opposing field. This <strong>chemical shielding</strong> (constant σ) reduces the effective field felt by the nucleus:</P>
+                <Fml>B<sub style={{fontSize:"0.75em",fontStyle:"normal"}}>eff</sub> = B₀ (1 − σ)</Fml>
+                <P>Since σ is of the order 10⁻⁶, differences are expressed as <strong>chemical shift δ in ppm</strong>, a field-independent quantity (IUPAC convention):</P>
+                <Fml>δ = (ν − ν<sub style={{fontSize:"0.75em",fontStyle:"normal"}}>ref</sub>) / ν<sub style={{fontSize:"0.75em",fontStyle:"normal"}}>ref</sub> × 10⁶</Fml>
+                <Callout color={C.green} bg={C.greenSoft}><strong>Why ppm?</strong> The resonance frequency ν (Hz) scales with B₀. Expressing differences relative to the operating frequency removes the B₀ dependence, making spectra from different spectrometers directly comparable.</Callout>
+                <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:14}}>
+                  <div className="glass-light" style={{flex:"1 1 150px",borderRadius:12,padding:"14px 15px",borderLeft:`3px solid ${C.blue}`}}>
+                    <p style={{fontWeight:700,color:C.blue,margin:"0 0 5px",fontSize:14}}>Upfield (low δ)</p>
+                    <p style={{fontSize:13,color:C.textSec,margin:0}}>High electron density, strong shielding, small δ. Example: CH₃ at ~1 ppm.</p>
+                  </div>
+                  <div className="glass-light" style={{flex:"1 1 150px",borderRadius:12,padding:"14px 15px",borderLeft:`3px solid ${C.red}`}}>
+                    <p style={{fontWeight:700,color:C.red,margin:"0 0 5px",fontSize:14}}>Downfield (high δ)</p>
+                    <p style={{fontSize:13,color:C.textSec,margin:0}}>Low electron density, weak shielding, large δ. Example: COOH at ~12 ppm.</p>
+                  </div>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div className="glass-light" style={{borderRadius:20,padding:22}}>
+                  <p style={{fontWeight:700,fontSize:15,color:C.text,marginBottom:14,fontFamily:"'Cormorant Garamond',serif"}}>Typical ¹H Chemical Shift Ranges</p>
+                  {[{l:"RCOOH (carboxylic acid)",r:"10–12",c:C.red},{l:"RCHO (aldehyde)",r:"9–10",c:C.blue},{l:"ArH (aromatic)",r:"6.5–8",c:C.orange},{l:"R₂C=CH₂ (vinyl)",r:"4.5–6.5",c:C.purple},{l:"RCH₂OR (ether)",r:"3.3–4",c:C.seafoam},{l:"RCH₃ (methyl)",r:"0.9–1.2",c:C.green},{l:"TMS (reference)",r:"0",c:C.textTer}].map(r=>(
+                    <div key={r.l} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:`1px solid ${C.border}`,flexWrap:"wrap",gap:4}}>
+                      <span style={{fontSize:13,color:C.text}}>{r.l}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:r.c,fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic"}}>{r.r} ppm</span>
+                    </div>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+
+            {/* CHECKPOINT after Module 5 */}
+            <Reveal delay={.3}>
+              <CheckpointQuiz questions={CHECKPOINT_M5} moduleLabel="Chemical Shift"/>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 6 */}
+          <Section id="sec-spectrum" bg={C.bg}>
+            <Reveal><Label>Module 6: Reading the NMR Spectrum</Label><H>Interpreting Peaks</H><P size={17}>Each peak corresponds to nuclei in a specific chemical environment. Hover over the peaks to explore their assignment.</P></Reveal>
+            <Reveal delay={.1}><IntSpectrum/></Reveal>
+            <Reveal delay={.2}><div className="grid-auto" style={{marginTop:36}}>
+              <InfoCard icon="📍" title="Chemical shift (δ)" text="The position in ppm identifies the electronic environment. Each functional group has a characteristic shift range." accent={C.blue}/>
+              <InfoCard icon="📐" title="Integral" text="The area under each peak is proportional to the number of nuclei in that environment, enabling proton counting." accent={C.seafoam}/>
+              <InfoCard icon="🔀" title="Multiplicity" text="Peaks split by J-coupling according to the n+1 rule. Singlet: no neighbours. Doublet: one. Triplet: two." accent={C.orange}/>
+              <InfoCard icon="📏" title="Linewidth" text="T₂ relaxation governs linewidth. Short T₂ (solids, large proteins) gives broad peaks; long T₂ (small molecules) gives narrow peaks." accent={C.purple}/>
+            </div></Reveal>
+            <Reveal delay={.25}>
+              <div className="glass-light" style={{borderRadius:18,padding:"20px 22px",marginTop:32}}>
+                <p style={{fontWeight:700,fontSize:14,color:C.gold,marginBottom:4,textTransform:"uppercase",letterSpacing:"0.08em",fontFamily:"'Cormorant Garamond',serif"}}>Case study: ¹H NMR of Ethanol</p>
+                <p style={{fontSize:12,color:C.textSec,marginBottom:14}}>CH₃CH₂OH — three chemically distinct proton environments</p>
+                {/* Inline SVG: accurate ¹H NMR spectrum of ethanol */}
+                <svg viewBox="0 0 500 180" style={{width:"100%",display:"block",background:"rgba(6,6,14,0.6)",borderRadius:10,padding:4}}>
+                  {/* Baseline */}
+                  <line x1={20} y1={140} x2={480} y2={140} stroke={C.border} strokeWidth={1.5}/>
+                  {/* X axis: 5 ppm left → 0 ppm right, 1 ppm = 90px, origin at x=470 */}
+                  {[0,1,2,3,4,5].map(v=>(
+                    <g key={v}>
+                      <line x1={20+v*90} y1={140} x2={20+v*90} y2={146} stroke={C.border} strokeWidth={1}/>
+                      <text x={20+v*90} y={158} textAnchor="middle" fill={C.textSec} fontSize={11}>{5-v}</text>
+                    </g>
+                  ))}
+                  <text x={250} y={175} textAnchor="middle" fill={C.textSec} fontSize={11}>¹H Chemical shift δ (ppm)</text>
+                  {/* CH₂ quartet at δ 3.7: x = 20+(5-3.7)*90 = 137, J-spacing ≈ 14px, heights 1:3:3:1 */}
+                  {[{dx:-21,h:28},{dx:-7,h:84},{dx:7,h:84},{dx:21,h:28}].map(({dx,h},i)=>(
+                    <g key={i}>
+                      <ellipse cx={137+dx} cy={140-h/2} rx={6} ry={h/2} fill={C.blue} opacity={0.75}/>
+                      <line x1={137+dx} y1={140-h} x2={137+dx} y2={140} stroke={C.blue} strokeWidth={2} opacity={0.9}/>
+                    </g>
+                  ))}
+                  {/* CH₂ label + integral */}
+                  <text x={137} y={26} textAnchor="middle" fill={C.blue} fontSize={11} fontWeight={700}>CH₂</text>
+                  <text x={137} y={38} textAnchor="middle" fill={C.blue} fontSize={10} opacity={0.7}>δ 3.7 · quartet · 2H</text>
+                  <path d={`M 105 130 Q 137 110 169 130`} fill="none" stroke={C.blue} strokeWidth={1.5} opacity={0.4} strokeDasharray="3,2"/>
+                  {/* OH singlet at δ 2.6: x = 20+(5-2.6)*90 = 236 */}
+                  <ellipse cx={236} cy={140-45} rx={8} ry={45} fill={C.seafoam} opacity={0.65}/>
+                  <line x1={236} y1={50} x2={236} y2={140} stroke={C.seafoam} strokeWidth={2.5} opacity={0.85}/>
+                  <text x={236} y={26} textAnchor="middle" fill={C.seafoam} fontSize={11} fontWeight={700}>OH</text>
+                  <text x={236} y={38} textAnchor="middle" fill={C.seafoam} fontSize={10} opacity={0.7}>δ 2.6 · singlet · 1H</text>
+                  {/* CH₃ triplet at δ 1.2: x = 20+(5-1.2)*90 = 362, J-spacing ≈ 14px, heights 1:2:1 */}
+                  {[{dx:-14,h:42},{dx:0,h:84},{dx:14,h:42}].map(({dx,h},i)=>(
+                    <g key={i}>
+                      <ellipse cx={362+dx} cy={140-h/2} rx={7} ry={h/2} fill={C.purple} opacity={0.75}/>
+                      <line x1={362+dx} y1={140-h} x2={362+dx} y2={140} stroke={C.purple} strokeWidth={2} opacity={0.9}/>
+                    </g>
+                  ))}
+                  <text x={362} y={26} textAnchor="middle" fill={C.purple} fontSize={11} fontWeight={700}>CH₃</text>
+                  <text x={362} y={38} textAnchor="middle" fill={C.purple} fontSize={10} opacity={0.7}>δ 1.2 · triplet · 3H</text>
+                  <path d={`M 338 130 Q 362 108 386 130`} fill="none" stroke={C.purple} strokeWidth={1.5} opacity={0.4} strokeDasharray="3,2"/>
+                  {/* TMS reference */}
+                  <line x1={470} y1={140} x2={470} y2={128} stroke={C.textTer} strokeWidth={1.5}/>
+                  <text x={470} y={123} textAnchor="middle" fill={C.textTer} fontSize={9}>TMS</text>
+                </svg>
+                <p style={{fontSize:11,color:C.textTer,marginTop:8,textAlign:"center",fontStyle:"italic"}}>¹H NMR spectrum of ethanol: CH₂ quartet (δ 3.7, J = 7 Hz), OH singlet (δ 2.6), CH₃ triplet (δ 1.2, J = 7 Hz)</p>
+              </div>
+            </Reveal>
+
+            {/* CHECKPOINT after Module 6 */}
+            <Reveal delay={.3}>
+              <CheckpointQuiz questions={CHECKPOINT_M6} moduleLabel="Reading Spectra"/>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 7 */}
+          <Section id="sec-jsplit" bg={C.bgAlt}>
+            <Reveal><Label>Module 7: J-Coupling and the Karplus Equation</Label><H>Nuclei Communicating through Bonds</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P><strong>Scalar coupling</strong> (J-coupling) arises when adjacent nuclei sense each other's spin state through the electrons in intervening covalent bonds, causing peaks to split into multiplets.</P>
+                <P>The <strong>n+1 rule</strong>: a proton adjacent to n equivalent neighbouring protons produces n+1 lines with Pascal's triangle intensities. The coupling constant J (in Hz) is field-independent.</P>
+                <Callout color={C.blue}><strong>Ethanol ¹H NMR example:</strong> The CH₂ group (2H, adjacent to 3 CH₃ protons) appears as a quartet (1:3:3:1). The CH₃ group (3H, adjacent to 2 CH₂ protons) appears as a triplet (1:2:1). Both multiplets share the same J value (~7 Hz), confirming mutual coupling.</Callout>
+                <Callout color={C.orange} bg={C.orangeSoft}><strong>Karplus equation:</strong> ³J_HH = A cos²θ − B cos θ + C. The magnitude of the three-bond coupling constant depends on the dihedral angle θ. This connects J values to molecular geometry and enables NMR to report on protein secondary structure and conformation.</Callout>
+              </Reveal>
+              <Reveal delay={.25}><JSplitViz/></Reveal>
+            </div>
+            <Reveal delay={.2}><div style={{marginTop:38}}><KarplusCurve/></div></Reveal>
+
+            {/* CHECKPOINT after Module 7 */}
+            <Reveal delay={.3}>
+              <CheckpointQuiz questions={CHECKPOINT_M7} moduleLabel="J-Coupling & Karplus"/>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 8 */}
+          <Section id="sec-2d" bg={C.bg}>
+            <Reveal><Label>Module 8: Two-Dimensional NMR</Label><H>Two Dimensions, More Information</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>In one-dimensional spectra of large molecules, hundreds of peaks overlap within a limited spectral window. Introducing a <strong>second frequency dimension</strong> spreads resonances and encodes connectivity information.</P>
+                <P>Cross-peaks identify which nuclei are related:</P>
+                <Callout color={C.blue}><strong>COSY:</strong> ¹H–¹H connectivity through 2–3 covalent bonds. Used to map the carbon skeleton.</Callout>
+                <Callout color={C.purple}><strong>NOESY:</strong> ¹H–¹H proximity in 3D space (less than 5 Å). NOE intensity is proportional to r⁻⁶, making NOESY the primary source of distance restraints for protein structure determination.</Callout>
+                <Callout color={C.seafoam}><strong>HSQC:</strong> One-bond ¹H–¹³C correlation. Each cross-peak represents a CH bond, providing a complete molecular fingerprint.</Callout>
+                <P size={14}>For proteins above ~10 kDa, 3D and 4D experiments (HNCA, HNCACB, NOESY-HSQC) combined with ¹³C/¹⁵N isotope labelling are required for full resonance assignment.</P>
+                {/* Inline SVG: stylised protein ribbon/backbone diagram */}
+                <div className="glass" style={{borderRadius:14,padding:"16px 12px",marginTop:16}}>
+                  <svg viewBox="0 0 260 140" style={{width:"100%",display:"block"}}>
+                    <defs>
+                      <filter id="pglow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    {/* Alpha-helix ribbon (left) */}
+                    {Array.from({length:9},(_,i)=>{
+                      const cx=50, y=20+i*12, w=32, h=8;
+                      const flip=i%2===0;
+                      return <ellipse key={i} cx={cx} cy={y} rx={w/2} ry={h/2} fill={C.blue} opacity={0.55+(i%2)*0.15} transform={`rotate(${flip?-8:8},${cx},${y})`} filter="url(#pglow)"/>;
+                    })}
+                    <text x={50} y={135} textAnchor="middle" fill={C.blue} fontSize={9} opacity={0.8}>α-helix</text>
+                    {/* Beta-sheet ribbons (center) */}
+                    {[40,60,80,100,120].map((y,i)=>(
+                      <g key={y}>
+                        <rect x={105} y={y} width={55} height={9} rx={2} fill={C.seafoam} opacity={0.5+i*0.08}/>
+                        <polygon points={`160,${y-3} 170,${y+4} 160,${y+12}`} fill={C.seafoam} opacity={0.65+i*0.06}/>
+                      </g>
+                    ))}
+                    <text x={135} y={135} textAnchor="middle" fill={C.seafoam} fontSize={9} opacity={0.8}>β-sheet</text>
+                    {/* Random coil (right) */}
+                    <path d="M 185 30 C 200 45 190 60 205 70 C 220 80 200 100 215 115 C 225 125 210 130 220 138" fill="none" stroke={C.purple} strokeWidth={3} opacity={0.6} strokeLinecap="round"/>
+                    <text x={205} y={135} textAnchor="middle" fill={C.purple} fontSize={9} opacity={0.8} style={{fontSize:"8px"}}>loop</text>
+                    {/* NOE distance annotation — white with subtle styling */}
+                    <defs>
+                      <marker id="noeArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                        <polygon points="0,0 6,3 0,6" fill="rgba(220,230,255,0.75)"/>
+                      </marker>
+                    </defs>
+                    <line x1={82} y1={64} x2={110} y2={78}
+                      stroke="rgba(220,230,255,0.55)" strokeWidth={1.2} strokeDasharray="3,2"
+                      markerEnd="url(#noeArrow)"/>
+                    <rect x={72} y={53} width={40} height={18} rx={4}
+                      fill="rgba(0,0,0,0.4)" stroke="rgba(220,230,255,0.2)" strokeWidth={0.8}/>
+                    <text x={92} y={63} fill="rgba(220,230,255,0.9)" fontSize={8} textAnchor="middle" fontWeight={600}>NOE</text>
+                    <text x={92} y={72} fill="rgba(180,200,255,0.7)" fontSize={7} textAnchor="middle">{"< 5 Å"}</text>
+                  </svg>
+                  <p style={{fontSize:11,color:C.textTer,textAlign:"center",margin:"4px 0 0",fontStyle:"italic"}}>Protein secondary structure elements — α-helix, β-sheet, loops — determined by NMR distance restraints</p>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}>
+                <div>
+                  <p style={{fontSize:13,color:C.textSec,marginBottom:12,textAlign:"center"}}>Select an experiment to view the cross-peak pattern.</p>
+                  <TwoDNMR/>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* CHECKPOINT after Module 8 */}
+            <Reveal delay={.3}>
+              <CheckpointQuiz questions={CHECKPOINT_M8} moduleLabel="2D NMR"/>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 9 */}
+          <Section id="sec-solid" bg={C.bgAlt}>
+            <Reveal><Label>Module 9: Solid-State NMR</Label><H>When Solution NMR Is Not Applicable</H></Reveal>
+            <div className="two-col">
+              <Reveal delay={.1}>
+                <P>Solution NMR requires rapid, isotropic molecular tumbling to average anisotropic interactions to zero. Many important systems cannot be dissolved: membrane proteins, amyloid fibrils, inorganic catalysts, and polymers.</P>
+                <P>In the solid state, molecules are fixed in position. Each crystallite orientation resonates at a slightly different frequency, producing a broad <strong>powder pattern</strong> that can span tens of kilohertz.</P>
+                <Callout color={C.blue}><strong>Magic Angle Spinning (MAS):</strong> The sample is rotated at 10,000–100,000 rpm around an axis inclined at 54.74° to B₀ (where 3cos²θ − 1 = 0). This mechanical averaging eliminates dipolar couplings and chemical shift anisotropy, restoring solution-like linewidths.</Callout>
+                <Callout color={C.green} bg={C.greenSoft}><strong>Key applications:</strong> amyloid fibrils (Huntington's, Parkinson's disease), membrane proteins, inorganic catalysts, pharmaceutical polymorphs, hydrogels, and polymer materials.</Callout>
+                {/* Inline SVG: powder pattern vs MAS-narrowed spectrum */}
+                <div className="glass" style={{borderRadius:14,padding:"14px 12px",marginTop:16}}>
+                  <p style={{fontSize:11,fontWeight:700,color:C.textSec,textTransform:"uppercase",letterSpacing:"0.07em",margin:"0 0 10px",textAlign:"center"}}>Solid-state NMR: powder pattern vs MAS</p>
+                  <svg viewBox="0 0 260 110" style={{width:"100%",display:"block"}}>
+                    {/* Powder pattern (broad, left) */}
+                    <text x={65} y={14} textAnchor="middle" fill={C.textTer} fontSize={8}>Without MAS</text>
+                    <line x1={10} y1={90} x2={120} y2={90} stroke={C.border} strokeWidth={1}/>
+                    {/* Broad Lorentzian/powder shape */}
+                    <path d="M 15 90 Q 25 85 35 75 Q 50 55 65 50 Q 80 55 90 70 Q 100 82 110 88 L 120 90" fill="none" stroke={C.purple} strokeWidth={2} opacity={0.7}/>
+                    <path d="M 15 90 Q 25 85 35 75 Q 50 55 65 50 Q 80 55 90 70 Q 100 82 110 88 L 120 90 Z" fill={C.purple} opacity={0.12}/>
+                    <text x={65} y={104} textAnchor="middle" fill={C.textTer} fontSize={7}>frequency →</text>
+                    <text x={65} y={44} textAnchor="middle" fill={C.purple} fontSize={8} opacity={0.8}>~30 kHz broad</text>
+                    {/* Arrow */}
+                    <text x={135} y={52} textAnchor="middle" fill={C.gold} fontSize={18}>→</text>
+                    <text x={135} y={65} textAnchor="middle" fill={C.gold} fontSize={7} opacity={0.8}>MAS</text>
+                    <text x={135} y={74} textAnchor="middle" fill={C.gold} fontSize={7} opacity={0.8}>54.74°</text>
+                    {/* MAS-narrowed peaks (right) */}
+                    <text x={195} y={14} textAnchor="middle" fill={C.textTer} fontSize={8}>With MAS</text>
+                    <line x1={150} y1={90} x2={260} y2={90} stroke={C.border} strokeWidth={1}/>
+                    {/* Narrow peaks */}
+                    {[175,195,215].map((x,i)=>{
+                      const h=[65,45,55][i];
+                      return <g key={x}><ellipse cx={x} cy={90-h/2} rx={4} ry={h/2} fill={C.seafoam} opacity={0.7}/><line x1={x} y1={90-h} x2={x} y2={90} stroke={C.seafoam} strokeWidth={2}/></g>;
+                    })}
+                    <text x={195} y={104} textAnchor="middle" fill={C.textTer} fontSize={7}>frequency →</text>
+                    <text x={195} y={22} textAnchor="middle" fill={C.seafoam} fontSize={8} opacity={0.8}>sharp lines</text>
+                  </svg>
+                  <p style={{fontSize:10,color:C.textTer,textAlign:"center",margin:"4px 0 0",fontStyle:"italic"}}>MAS at 54.74° averages anisotropic interactions, converting broad powder patterns into resolved peaks</p>
+                </div>
+              </Reveal>
+              <Reveal delay={.25}><MASAnim/></Reveal>
+            </div>
+          </Section>
+
+          {/* MODULE 10 */}
+          <Section id="sec-app" bg={C.bgDark}>
+            <Reveal><Label>Module 10: Applications</Label><H>NMR in Practice</H></Reveal>
+            <div className="grid-auto-sm" style={{marginTop:16}}>
+              {[
+                {icon:"🏥",t:"MRI",d:"Magnetic resonance imaging applies ¹H NMR of tissue water to generate 3D anatomical images without ionising radiation. Contrast arises from spatial variations in T₁ and T₂.",c:C.blue},
+                {icon:"💊",t:"Drug discovery",d:"NMR reveals how drug candidates bind to protein targets, enabling structure-activity relationship analysis. Fragment-based drug design relies on NMR screening.",c:C.orange},
+                {icon:"🧬",t:"Protein structure",d:"Solution NMR determines 3D protein structures up to ~50 kDa. Solid-state NMR extends this to amyloid fibrils, membrane proteins, and large assemblies.",c:C.green},
+                {icon:"🛢️",t:"Food &amp; quality control",d:"Low-field NMR measures water and fat content non-destructively. Metabolomics (¹H NMR of urine/blood) provides metabolic profiles for biomarker discovery.",c:C.seafoam},
+                {icon:"⚗️",t:"Chemical synthesis",d:"NMR confirms the structure of synthetic products, assesses purity, and determines stereochemistry including R/S configuration and cis/trans isomerism.",c:C.purple},
+                {icon:"🔩",t:"Materials science",d:"Solid-state NMR characterises polymers, zeolite catalysts, hydrogels, and inorganic materials. ²⁹Si NMR for silicates; ³¹P NMR for phosphate-based materials.",c:C.seafoam},
+              ].map(item=>(
+                <Reveal key={item.t}>
+                  <div className="card-hover glass" style={{borderRadius:18,padding:"22px 20px",border:`1px solid ${item.c}25`,borderTop:`2px solid ${item.c}60`}}>
+                    <div style={{fontSize:28,marginBottom:10}}>{item.icon}</div>
+                    <p style={{fontWeight:700,fontSize:15,color:item.c,margin:"0 0 8px",fontFamily:"'Cormorant Garamond',serif"}}>{item.t}</p>
+                    <p style={{fontSize:13,color:C.textSec,lineHeight:1.65,margin:0}}>{item.d}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal delay={.2}><VideoEmbed id="OZjpaDMSXVM" title="MRI Scan Animation: How Magnetic Resonance Imaging Works" caption="MRI Scan Animation: step-by-step visual explanation of how MRI works (approx. 6 min)"/></Reveal>
+            <Reveal delay={.25}>
+              <div className="glass" style={{borderRadius:18,overflow:"hidden",marginTop:24,display:"flex",gap:0,flexWrap:"wrap"}}>
+                {/* Inline SVG: stylised MRI brain cross-section */}
+                <div style={{flex:"1 1 260px",background:"rgba(0,0,0,0.6)",display:"flex",alignItems:"center",justifyContent:"center",padding:"16px"}}>
+                  <svg viewBox="0 0 200 200" style={{width:"100%",maxWidth:200,display:"block"}}>
+                    <defs>
+                      <radialGradient id="brainGrad" cx="50%" cy="45%" r="50%">
+                        <stop offset="0%" stopColor="#1a2a4a"/>
+                        <stop offset="60%" stopColor="#0d1830"/>
+                        <stop offset="100%" stopColor="#060e1e"/>
+                      </radialGradient>
+                      <radialGradient id="greyGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#2a3a5a"/>
+                        <stop offset="100%" stopColor="#1a2540"/>
+                      </radialGradient>
+                      <filter id="mriBlur"><feGaussianBlur stdDeviation="0.8"/></filter>
+                    </defs>
+                    {/* Skull outline */}
+                    <ellipse cx={100} cy={95} rx={88} ry={90} fill="none" stroke="#4AA8FF" strokeWidth="1.5" opacity="0.5"/>
+                    {/* Brain cortex */}
+                    <ellipse cx={100} cy={95} rx={76} ry={78} fill="url(#brainGrad)" filter="url(#mriBlur)"/>
+                    {/* White matter (brighter centre) */}
+                    <ellipse cx={100} cy={100} rx={40} ry={38} fill="url(#greyGrad)" opacity="0.8"/>
+                    {/* Gyri folds (folded surface lines) */}
+                    {[
+                      "M 38 70 Q 55 50 72 62",
+                      "M 72 62 Q 85 48 100 55",
+                      "M 100 55 Q 118 45 132 58",
+                      "M 132 58 Q 148 52 160 68",
+                      "M 36 100 Q 30 120 40 140",
+                      "M 160 100 Q 170 118 162 140",
+                      "M 55 148 Q 72 158 100 162",
+                      "M 100 162 Q 130 158 145 148",
+                    ].map((d,i)=><path key={i} d={d} fill="none" stroke="#4AA8FF" strokeWidth="1.2" opacity="0.35"/>)}
+                    {/* Ventricles */}
+                    <ellipse cx={88} cy={95} rx={10} ry={15} fill="#2EC4E0" opacity="0.25"/>
+                    <ellipse cx={112} cy={95} rx={10} ry={15} fill="#2EC4E0" opacity="0.25"/>
+                    {/* Corpus callosum */}
+                    <path d="M 78 85 Q 100 78 122 85" fill="none" stroke="#7A9FFF" strokeWidth="2" opacity="0.5"/>
+                    {/* T1/T2 label arrows */}
+                    <line x1={60} y1={95} x2={42} y2={78} stroke={C.gold} strokeWidth={0.8} opacity={0.6}/>
+                    <text x={34} y={75} fill={C.gold} fontSize={8} opacity={0.85}>T₁</text>
+                    <line x1={140} y1={95} x2={158} y2={78} stroke={C.seafoam} strokeWidth={0.8} opacity={0.6}/>
+                    <text x={160} y={75} fill={C.seafoam} fontSize={8} opacity={0.85}>T₂</text>
+                    {/* "MRI" label */}
+                    <text x={100} y={192} textAnchor="middle" fill="#4AA8FF" fontSize={9} fontWeight="600" opacity={0.7}>¹H NMR of tissue water</text>
+                  </svg>
+                </div>
+                <div style={{flex:"1 1 240px",padding:"20px 22px",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                  <p style={{fontWeight:700,fontSize:16,color:C.blue,margin:"0 0 10px",fontFamily:"'Cormorant Garamond',serif"}}>🏥 MRI — NMR in the clinic</p>
+                  <p style={{fontSize:13,color:C.textSec,lineHeight:1.72,margin:0}}>Magnetic Resonance Imaging maps the ¹H signal of water molecules in tissue. Spatial encoding via gradient fields allows 3D image reconstruction. Contrast between tissue types arises from differences in T₁ and T₂ relaxation times — the same parameters you have studied throughout this module.</p>
+                </div>
+              </div>
+            </Reveal>
+          </Section>
+
+          {/* MODULE 11: QUIZ */}
+          <Section id="sec-quiz" bg={C.bgAlt}>
+            <Reveal>
+              <Label>Module 11: Knowledge Assessment</Label>
+              <H>Test Your Understanding</H>
+              <P size={17}>Five conceptual questions covering the advanced topics. You've already encountered questions on energy levels, chemical shift, spectra, and coupling — this final section tests solid-state NMR, relaxation, and 2D methods.</P>
+            </Reveal>
+            <Reveal delay={.1}><div style={{maxWidth:700}}><QuizSection/></div></Reveal>
+          </Section>
+
+          {/* SUMMARY */}
+          <Section id="sec-summary" bg={C.bgDark}>
+            <Reveal><Label>Summary</Label><H>Core Concepts of NMR</H></Reveal>
+            <div className="grid-auto-sm">
+              {[
+                {icon:"⚛️",t:"Nuclear spin",d:"Nuclei with I ≠ 0 are NMR-active. μ = γI. ¹H has the largest γ (26.75 × 10⁷ rad/T/s) and therefore the greatest sensitivity.",c:C.blue},
+                {icon:"⚡",t:"Larmor frequency",d:"ΔE = γℏB₀. ν₀ = γB₀/2π. Boltzmann excess is ~96 ppm at 14.1 T and 300 K, making sensitivity a fundamental challenge.",c:C.orange},
+                {icon:"🔬",t:"Chemical shift",d:"B_eff = B₀(1 − σ). Chemical shift δ in ppm is field-independent and reports on the electronic environment of each nucleus.",c:C.seafoam},
+                {icon:"🔗",t:"J-coupling",d:"n+1 rule governs multiplet patterns. The Karplus equation connects ³J coupling constants to dihedral angles and molecular conformation.",c:C.green},
+                {icon:"🗺️",t:"2D NMR",d:"COSY (H-H through bonds), NOESY (H-H in space, NOE ∝ r⁻⁶), and HSQC (H-C one bond) form the basis for protein structure determination.",c:C.purple},
+                {icon:"🏋️",t:"Solid-state NMR",d:"MAS at 54.74° averages dipolar couplings and CSA to zero, restoring sharp linewidths for solid samples that cannot be dissolved.",c:C.seafoam},
+              ].map(item=>(
+                <Reveal key={item.t}>
+                  <div className="glass" style={{borderRadius:15,padding:"20px 18px",border:`1px solid ${item.c}25`,borderLeft:`2px solid ${item.c}60`}}>
+                    <div style={{fontSize:24,marginBottom:9}}>{item.icon}</div>
+                    <p style={{fontWeight:700,fontSize:14,color:item.c,margin:"0 0 7px",fontFamily:"'Cormorant Garamond',serif"}}>{item.t}</p>
+                    <p style={{fontSize:12,color:C.textSec,lineHeight:1.65,margin:0}}>{item.d}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+            <Reveal delay={.3}>
+              <div style={{marginTop:60,paddingBottom:16}}>
+                <div style={{borderTop:`1px solid rgba(201,169,110,0.2)`,paddingTop:44,display:"flex",gap:40,flexWrap:"wrap",justifyContent:"space-between",alignItems:"flex-start"}}>
+                  <div>
+                    <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(201,169,110,0.5)",margin:"0 0 16px"}}>Authors</p>
+                    <div style={{display:"flex",gap:32,flexWrap:"wrap"}}>
+                      {[{name:"Sem Andriessen",num:"S5842212"},{name:"Niels van der Heide",num:"S5989515"},{name:"Tim Krol",num:"S5973058"},{name:"Gosse Zandstra",num:"S5465508"}].map(s=>(
+                        <div key={s.num}>
+                          <p style={{color:"#f0f0f8",fontSize:14,fontWeight:600,margin:"0 0 2px"}}>{s.name}</p>
+                          <p style={{color:"rgba(90,90,122,0.7)",fontSize:12,margin:0}}>{s.num}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <p style={{fontSize:11,fontWeight:700,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(201,169,110,0.5)",margin:"0 0 10px"}}>Course material</p>
+                    <p style={{color:C.textSec,fontSize:13,lineHeight:1.7,margin:0}}>
+                      Patrick van der Wel.<br/>
+                      Surface Characterization (BME BSc): NMR Spectroscopy.<br/>
+                      University of Groningen, 2024–2025.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </Section>
+
+          <References/>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App, null));
+  </script>
+</body>
+</html>
